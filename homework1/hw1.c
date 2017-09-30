@@ -25,11 +25,23 @@ pthread_t consumer_threads[NUM_CONSUMERS];
 pthread_t producer_threads[NUM_PRODUCERS];
 pthread_mutex_t mutex_lock;
 
-void consume(void* argument){
+
+/*int is_mutex_locked(){
+	return pthread_mutex_trylock(&mutex_lock);
+}*/
+
+void* consume(void* argument){
+	pthread_mutex_lock(&mutex_lock);
+
 	int arg = *((int*)argument);
+
 	printf( " Started consumer thread %d\n", arg);
 	sleep( arg+1 );
 	printf( " Stopped consumer thread %d\n", arg );
+
+	pthread_mutex_unlock(&mutex_lock);
+
+	return NULL;
 }
 
 int main() {
@@ -41,6 +53,8 @@ int main() {
 		buffer[i].time = -1;
 	}
 
+	pthread_mutex_init(&mutex_lock, NULL);
+	pthread_mutex_unlock(&mutex_lock);
 
 	/* Consumer threads */
 	for (i = 0; i < NUM_CONSUMERS; i++){
@@ -62,7 +76,8 @@ int main() {
 		pthread_join(consumer_threads[i], NULL);
 	}
 
-
+	/* Cleanup */
+	pthread_mutex_destroy(&mutex_lock);
 
 	return 0;
 }
