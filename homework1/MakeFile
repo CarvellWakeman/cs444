@@ -1,4 +1,4 @@
 all: hw1.c
-	gcc -o hw1 -g hw1.c
+	gcc -pthread -o hw1 -g hw1.c
 clean:
 	rm -f *.o *.exe
