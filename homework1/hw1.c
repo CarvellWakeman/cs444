@@ -30,21 +30,29 @@ pthread_mutex_t mutex_lock;
     return pthread_mutex_trylock(&mutex_lock);
 }*/
 
+int random_num(){
+    return 4;
+}
+
 void* produce(void* argument){
     /* Get lock */
     pthread_mutex_lock(&mutex_lock);
+    int arg = *((int*)argument);
+
+    printf("Producer %d locking mutex\n", arg);
 
     /* Sleep for a period of time */
     sleep (2);
 
     /* Produce an Item */
     struct Item naturalFreeRangeArtisanMadeGMOFreeItem;
-    naturalFreeRangeArtisanMadeGMOFreeItem.val = 4;
-    naturalFreeRangeArtisanMadeGMOFreeItem.time = *((int*)argument);
+    naturalFreeRangeArtisanMadeGMOFreeItem.val = random_num();
+    naturalFreeRangeArtisanMadeGMOFreeItem.time = random_num();
 
     /* Place item in buffer */
     while (1){
         if (itemCount < DATASIZE){
+            printf("Producer %d produced item %d\n", arg, itemCount);
             buffer[itemCount] = naturalFreeRangeArtisanMadeGMOFreeItem;
             itemCount++;
             break;
@@ -58,24 +66,32 @@ void* produce(void* argument){
 }
 
 void* consume(void* argument){
-    /* Get lock */
-    pthread_mutex_lock(&mutex_lock);
-
     int arg = *((int*)argument);
 
-    printf( "Started consumer thread %d\n", arg);
+    printf("Consumer %d locking mutex\n", arg);
 
     /* Check buffer for item to consume */
-    while (1){
+    int wait = 1;
+    while (wait){
+        /* Get lock */
+        pthread_mutex_lock(&mutex_lock);
+
         if (itemCount > 0){
-            sleep(buffer[itemCount-1].time); /* work */
+            printf("Consumer %d consuming item %d\n", arg, itemCount);
+            int to_consume = itemCount;
+
             itemCount--;
-            break;
+
+            /* work */
+            sleep(buffer[to_consume-1].time);
+            printf("Consumer %d consumed item %d\n", arg, to_consume);
+            wait = 0;
         }
+
+        /* Release lock */
+        pthread_mutex_unlock(&mutex_lock);
     }
 
-    /* Release lock */
-    pthread_mutex_unlock(&mutex_lock);
 
     return NULL;
 }
@@ -92,7 +108,6 @@ int main() {
     pthread_mutex_init(&mutex_lock, NULL);
     pthread_mutex_unlock(&mutex_lock);
 
-
     /* Consumer threads */
     for (i = 0; i < NUM_CONSUMERS; i++){
         pthread_t consumerID;
@@ -108,10 +123,32 @@ int main() {
         }
     }
 
+    /* Producer threads */
+    for (i = 0; i < NUM_PRODUCERS; i++){
+        pthread_t producerID;
+        int *arg = malloc(sizeof(*arg));
+        *arg = i;
+        int result = pthread_create( &producerID, NULL, (void*)produce, arg );
+        if (result == 1) {
+            printf("Failed to create producer thread\n");
+            return 1;
+        } else {
+            printf("Created producer thread %d\n", i);
+            producer_threads[i] = producerID;
+        }
+    }
+
+
     /* Wait for consumer threads */
     for (i = 0; i < NUM_CONSUMERS; i++){
         pthread_join(consumer_threads[i], NULL);
     }
+
+    /* Wait for producer threads */
+    for (i = 0; i < NUM_PRODUCERS; i++){
+        pthread_join(producer_threads[i], NULL);
+    }
+
 
     /* Cleanup */
     pthread_mutex_destroy(&mutex_lock);
