@@ -69,7 +69,7 @@ static uint32   *next;          // next random value is computed from here
 static int      left = -1;      // can *next++ this many times before reloading
 
 void seedMT(uint32 seed)
- {
+{
     //
     // We initialize state[0..(N-1)] via the generator
     //
@@ -121,11 +121,11 @@ void seedMT(uint32 seed)
 
     for(left=0, *s++=x, j=N; --j;
         *s++ = (x*=69069U) & 0xFFFFFFFFU);
- }
+}
 
 
 uint32 reloadMT(void)
- {
+{
     register uint32 *p0=state, *p2=state+2, *pM=state+M, s0, s1;
     register int    j;
 
@@ -145,11 +145,11 @@ uint32 reloadMT(void)
     s1 ^= (s1 <<  7) & 0x9D2C5680U;
     s1 ^= (s1 << 15) & 0xEFC60000U;
     return(s1 ^ (s1 >> 18));
- }
+}
 
 
 uint32 randomMT(void)
- {
+{
     uint32 y;
 
     if(--left < 0)
@@ -160,22 +160,4 @@ uint32 randomMT(void)
     y ^= (y <<  7) & 0x9D2C5680U;
     y ^= (y << 15) & 0xEFC60000U;
     return(y ^ (y >> 18));
- }
-
-#ifdef NOCOMPILE
-int main(void)
- {
-    int j;
-
-    // you can seed with any uint32, but the best are odds in 0..(2^32 - 1)
-
-    seedMT(4357U);
-
-    // print the first 2,002 random numbers seven to a line as an example
-
-    for(j=0; j<2002; j++)
-        printf(" %10lu%s", (unsigned long) randomMT(), (j%7)==6 ? "\n" : "");
-
-    return(EXIT_SUCCESS);
- }
-#endif
+}
