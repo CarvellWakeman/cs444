@@ -1,0 +1,84 @@
+\documentclass[letterpaper,10pt,fleqn]{article}
+
+\usepackage{titling}
+\usepackage{url}
+\usepackage{enumitem}
+\usepackage{geometry}
+\geometry{textheight=9.25in, textwidth=6.75in} % 0.75" margins 
+\usepackage{hyperref}
+\usepackage{listings}
+\usepackage{cite}
+
+\def\name{Group 26}
+
+
+\title{Homework 1 Report\\\large CS444 Fall17}
+\author{Zach Lerew, Rohan Barve\\\large Group 26}
+\date{\today}
+
+
+
+\begin{document}
+
+	% Title page
+	\begin{titlingpage}
+		\maketitle
+		\begin{abstract}
+			This is an abstract
+		\end{abstract}
+	\end{titlingpage}
+
+
+	% Document body
+	\section*{Command line qemu parameters}
+	Section details
+
+	\section*{Concurrency assignment}
+	\subsection*{Purpose}
+	The assignment states that the purpose of concurrency assignments is to hone your skills in thinking in parallel.
+	Parallel programming is a large independent topic worthy of study.
+	When it comes to operating systems, synchronous work is less common and less useful than parallel async work.
+	This assignment helps us practice those skills.
+	\subsection*{Approach}
+	The problem was fairly easy to solve when you think in terms of objects and analogies.
+	\\There are items in a buffer, which must be created by producers, and consumed by consumers.
+	\\The buffer can be thought of as a cookie jar with a small opening, only one hand can get in at a time.
+	\\Once an item is taken out of the jar, another hand can get into the jar to do its job.
+	\\Items can be created and consumed outside of the jar (in parallel), and then fight for a chance to access it when they need to.
+	\\Out of this analogy easily comes the pieces needed to solve this problem:
+	\begin{itemize}
+		\item An item with some data.
+		\item A buffer to store those items.
+		\item A consumer who locks the mutex, checks the buffer for an item, takes one if it can, and then unlocks the mutex.
+		\item A producer who locks the mutex, checks if the buffer is full, adds a new item if it can, and then unlocks the mutex.
+		\item And lastly a main function to spawn threads and initialize data.
+	\end{itemize}
+	\subsection*{Testing}
+	With the above approach on paper, a loosely TDD approach was taken.
+	\\This problem was small enough however, that a manual test could be used for each step, rather than a traditonal failing unit test.
+	\\Final results were independently verified by both team members.
+	\subsection*{Learned}
+	Every time I work with C, I am reminded of its power, as well as its drawbacks.
+	This is a fairly simple problem to solve, which makes C an overly complicated tool to solve it with.
+	\\In a professional work environment, the tools that can be used are typically limited to the code base owned by the company.
+	\\Regardless of the problem and the tools that exist, if the code base is in C\#, the solution should be too (with occasional exceptions).
+	\\I understand that the purpose of the class and assignment is low level kernel programming in C (the language of this 'code base').
+	However, why use a 700 bhp v8 in a 4 door sedan that you drive to the grocery store in bumper-to-bumper traffic?
+
+	\section*{Version control log}
+	Git repo log
+
+	\section*{Work log}
+	This assignment has three distinct sections:
+	\begin{itemize}
+		\item Kernel building and qemu emulation
+		\item Consumer \& Producer concurrency problem
+		\item This document
+	\end{itemize}
+	The work was split between us as such -
+
+	\textbf{Zach}: Concurrency problem, document base / makefile
+
+	\textbf{Rohan}: Kernel emulation, concurrency problem review, document body
+
+\end{document}
