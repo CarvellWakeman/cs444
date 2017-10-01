@@ -8,6 +8,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
+#include <cpuid.h>
+#include "twister.h"
 
 #define DATASIZE 32
 #define NUM_CONSUMERS 5
@@ -30,8 +32,24 @@ pthread_mutex_t mutex_lock;
     return pthread_mutex_trylock(&mutex_lock);
 }*/
 
-int random_num(){
-    return 4;
+/* based on answer from https://codereview.stackexchange.com/a/150230 */
+int supports_rdrand(){
+    unsigned int flag_RDRAND = (1 << 30);
+    unsigned int eax, ebx, ecx, edx;
+    __get_cpuid(1, &eax, &ebx, &ecx, &edx);
+    return ((ecx & flag_RDRAND) == flag_RDRAND);
+}
+
+/* Mersenne Twister implementation credit mcs.anl.gov */
+int random_num(int min, int max){
+    unsigned long var = 0;
+
+    if (supports_rdrand()){
+        asm( "rdrand %0" : "=r" (var) );
+    } else {
+        var = (unsigned long) randomMT();
+    }
+    return ((var % (max-1)) + min);
 }
 
 void* produce(void* argument){
@@ -42,12 +60,12 @@ void* produce(void* argument){
     printf("Producer %d locking mutex\n", arg);
 
     /* Sleep for a period of time */
-    sleep (2);
+    sleep (random_num(3,7));
 
     /* Produce an Item */
     struct Item naturalFreeRangeArtisanMadeGMOFreeItem;
-    naturalFreeRangeArtisanMadeGMOFreeItem.val = random_num();
-    naturalFreeRangeArtisanMadeGMOFreeItem.time = random_num();
+    naturalFreeRangeArtisanMadeGMOFreeItem.val = random_num(1,10);
+    naturalFreeRangeArtisanMadeGMOFreeItem.time = random_num(2,9);
 
     /* Place item in buffer */
     while (1){
@@ -77,14 +95,15 @@ void* consume(void* argument){
         pthread_mutex_lock(&mutex_lock);
 
         if (itemCount > 0){
-            printf("Consumer %d consuming item %d\n", arg, itemCount);
             int to_consume = itemCount;
+
+            printf("Consumer %d consuming item %d for %d seconds\n", arg, itemCount, buffer[to_consume-1].time);
 
             itemCount--;
 
             /* work */
             sleep(buffer[to_consume-1].time);
-            printf("Consumer %d consumed item %d\n", arg, to_consume);
+            printf("Consumer %d consumed item with value %d\n", arg, buffer[to_consume-1].val);
             wait = 0;
         }
 
@@ -104,6 +123,8 @@ int main() {
         buffer[i].val = -1;
         buffer[i].time = -1;
     }
+
+    seedMT(4357U);
 
     pthread_mutex_init(&mutex_lock, NULL);
     pthread_mutex_unlock(&mutex_lock);
