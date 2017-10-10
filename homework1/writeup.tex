@@ -24,100 +24,22 @@
 	\begin{titlingpage}
 		\maketitle
 		\begin{abstract}
-			This is an abstract
+			Homework 1 involves sourcing the yocto kernel, building it, and running it with qemu. The second task is to solve a producer/consumer concurrency problem in C.
 		\end{abstract}
 	\end{titlingpage}
 
 
 	% Document body
 	\section*{Command line qemu parameters}
+	\href{https://linux.die.net/man/1/qemu-kvm}{All command descriptions learned from linux man pages}
 	\begin{itemize}
-		\item-h Display help and exit
-		\item-version Display version information and exit
-		\item-machine [type=]name[,prop=value[,...]]
-					 Select the emulated machine by name. Use "-machine help" to list
-           available machines.
-		\item-cpu model
-           Select CPU model ("-cpu help" for list and additional feature
-           selection)
+		\item-gdb\\
+					Wait for gdb connection on device dev. Typical connections will likely be TCP-based
 
-		\item-accel name[,prop=value[,...]]
-           This is used to enable an accelerator. Depending on the target
-           architecture, kvm, xen, hax or tcg can be available. By default, tcg
-           is used. If there is more than one accelerator specified, the next
-           one is used if the previous one fails to initialize.
-		\item--smp
-       [cpus=]n[,cores=cores][,threads=threads][,sockets=sockets][,maxcpus=maxcpus]
-           Simulate an SMP system with n CPUs. On the PC target, up to 255 CPUs
-           are supported. On Sparc32 target, Linux limits the number of usable
-           CPUs to 4.  For the PC target, the number of cores per socket, the
-           number of threads per cores and the total number of sockets can be
-           specified. Missing values will be computed. If any on the three
-           values is given, the total number of CPUs n can be omitted. maxcpus
-           specifies the maximum number of hotpluggable CPUs.
-		\item-numa node[,mem=size][,cpus=firstcpu[-lastcpu]][,nodeid=node]
-		\item-numa node[,memdev=id][,cpus=firstcpu[-lastcpu]][,nodeid=node]
-		\item-numa dist,src=source,dst=destination,val=distance
-		\item-numa cpu,node-id=node[,socket-id=x][,core-id=y][,thread-id=z]
-           Define a NUMA node and assign RAM and VCPUs to it.  Set the NUMA
-           distance from a source node to a destination node
-		\item-add-fd fd=fd,set=set[,opaque=opaque]
-           Add a file descriptor to an fd set.
-		\item-set group.id.arg=value
-           Set parameter arg for item id of type group
-		\item-global driver.prop=value
-		\item-mem-path path
-           Allocate guest RAM from a temporarily created file in path
-		\item -mem-prealloc
-           Preallocate memory when using -mem-path
-		\item-k language
-           Use keyboard layout language (for example "fr" for French). This
-           option is only needed where it is not easy to get raw PC keycodes
-           (e.g. on Macs, with some X11 servers or with a VNC or curses
-           display). You don't normally need to use it on PC/Linux or PC/Windows
-           hosts
-		\item-audio-help
-           Will show the audio subsystem help: list of drivers, tunable
-           parameters
-		\item-soundhw card1[,card2,...] or -soundhw all
-           Enable audio and selected sound hardware. Use 'help' to print all
-           available sound hardware
-		\item-balloon none
-           Disable balloon device
-		\item-balloon virtio[,addr=addr]
-           Enable virtio balloon device (default), optionally with PCI address
-           addr
-		\item-name name
-           Sets the name of the guest.  This name will be displayed in the SDL
-           window caption.  The name will also be used for the VNC server.  Also
-           optionally set the top visible process name in Linux.  Naming of
-           individual threads can also be enabled on Linux to aid debugging
+		\item-S\\
+					Do not start CPU at startup
 
-		\item-uuid uuid
-           Set system UUID
-
-    \item-fda file
-		\item-hdd file
-           Use file as hard disk 0, 1, 2 or 3 image
-		\item-cdrom file
-           Use file as CD-ROM image (you cannot use -hdc and -cdrom at the same
-           time). You can use the host CD-ROM by using /dev/cdrom as filename
-
-		\item-blockdev option[,option[,option[,...]]]
-           Define a new block driver node. Some of the options apply to all
-           block drivers, other options are only accepted for a specific block
-           driver. See below for a list of generic options and options for the
-           most common block drivers
-
-		\item-drive option[,option[,option[,...]]]
-           Define a new drive. This includes creating a block driver node (the
-           backend) as well as a guest device, and is mostly a shortcut for
-           defining the corresponding -blockdev and -device options
-
-		\item-full-screen
-           Start in full screen
-
-		\item-nographic
+		\item-nographic\\
            Normally, if QEMU is compiled with graphical window support, it
            displays output such as guest graphics, guest console, and the QEMU
            monitor in a window. With this option, you can totally disable
@@ -127,26 +49,31 @@
            can still use QEMU to debug a Linux kernel with a serial console. Use
            C-a h for help on switching between the console and monitor
 
-		\item-display type
-           Select type of display to use. This option is a replacement for the
-           old style -sdl/-curses/... options
-		\item-usb
+	  \item-kernel\\
+					The kernel image. Can either be a Linux kernel or in multiboot format.
+
+		\item-drive\\
+			     Define a new drive. This includes creating a block driver node (the
+			     backend) as well as a guest device, and is mostly a shortcut for
+			     defining the corresponding -blockdev and -device options
+
+		\item-enable-kvm\\
+					Enable KVM full virtualization support
+
+		\item-net\\
+					Indicate that no network devices should be configured. It is used to override the default configuration
+
+		\item-usb\\
            Enable the USB driver (if it is not used by default yet)
 
-		\item-usbdevice devname
-           Add the USB device devname. Note that this option is deprecated,
-           please use "-device usb-..." instead
-		\item -full-screen
-           Start in full screen
-		\item-vnc display[,option[,option[,...]]]
-           Normally, if QEMU is compiled with graphical window support, it
-           displays output such as guest graphics, guest console, and the QEMU
-           monitor in a window. With this option, you can have QEMU listen on
-           VNC display display and redirect the VGA display over the VNC
-           session. It is very useful to enable the usb tablet device when using
-           this option (option -device usb-tablet). When using the VNC display,
-           you must use the -k parameter to set the keyboard layout if you are
-           not using en-us
+		\item-localtime\\
+					Sets the time to the current UTC local time
+
+		\item--no-reboot\\
+					Exit instead of rebooting
+
+		\item--append\\
+					Pass commands to the parameters of the kernel when it is started
 
 	\end{itemize}
 
@@ -157,7 +84,7 @@
 		\item cd /scratch/fall2017/26.
 		\item git clone git://git.yoctoproject.org/linux-yocto-3.19.
 		\item cd linux-yocto-3.19.
-		\item git checkout 'v3.19.2', cd ../
+		\item git checkout \'v3.19.2\', cd ../
 		\item cp /scratch/files/environment-setup-i586-poky-linux* ./
 		\item cp /scratch/files/bzImage-qemux86.bin ./
 		\item cp /scratch/files/core-image-lsb-sdk-qemux86.ext4 ./
@@ -168,11 +95,7 @@
 		\item makemenuconfig, adjust general setting Local version to needed group no.
 		\item Save the file as .config and exited menuconfig.
 		\item Compiled the kernel using: make -j4 bzImage. Used 4 threads.
-		\item qemu-system-i386 -gdb tcp::5526 -S -nographic \
-    -kernel linux-yocto-3.19/arch/x86/boot/bzImage \
-    -drive file=core-image-lsb-sdk-qemux86.ext4,if=virtio \
-    -enable-kvm -net none -usb -localtime --no-reboot \
-    --append "root=/dev/vda rw console=ttyS0 debug"
+		\item qemu-system-i386 -gdb tcp::5526 -S -nographic -kernel linux-yocto-3.19/arch/x86/boot/bzImage -drive file=core-image-lsb-sdk-qemux86.ext4,if=virtio -enable-kvm -net none -usb -localtime --no-reboot --append "root=/dev/vda rw console=ttyS0 debug"
 		\item Open new terminal session and launch gdb.
 		\item Within gdb connect to specified port: (gdb) target remote:5526.
 		\item This step should result in the kernel booting and a login screen qemux86 appearing.
@@ -203,18 +126,38 @@
 	\end{itemize}
 	\subsection*{Testing}
 	With the above approach on paper, a loosely TDD approach was taken.
-	\\This problem was small enough however, that a manual test could be used for each step, rather than a traditonal failing unit test.
+	\\This problem was small enough however, that a manual test could be used for each step, rather than a traditional failing unit test.
 	\\Final results were independently verified by both team members.
 	\subsection*{Learned}
 	Every time I work with C, I am reminded of its power, as well as its drawbacks.
 	This is a fairly simple problem to solve, which makes C an overly complicated tool to solve it with.
 	\\In a professional work environment, the tools that can be used are typically limited to the code base owned by the company.
 	\\Regardless of the problem and the tools that exist, if the code base is in C\#, the solution should be too (with occasional exceptions).
-	\\I understand that the purpose of the class and assignment is low level kernel programming in C (the language of this 'code base').
+	\\I understand that the purpose of the class and assignment is low level kernel programming in C (the language of this \'code base\').
 	However, why use a 700 bhp v8 in a 4 door sedan that you drive to the grocery store in bumper-to-bumper traffic?
 
 	\section*{Version control log}
-	Git repo log
+		\begin{center}
+			\begin{tabular}{ |c|c|c| }
+				\hline
+				Date & Author & Description \\
+				2017-09-30 & Zach Lerew & Initial directory and hw1 start \\
+				2017-09-30 & Zach Lerew & Named makefile correctly, updated rules \\
+				2017-09-30 & Zach Lerew & Consumer threads created and run correctly \\
+				2017-09-30 & Zach Lerew & Consumer threads block until they finish consuming \\
+				2017-09-30 & Zach Lerew & Consumer threads wait for buffer items, producer work func made \\
+				2017-09-30 & Zach Lerew & Consumers lock and unlock mutex to allow producers a chance to produce \\
+				2017-09-30 & Zach Lerew & Implemented random number generation using asm() and Mersenne Twister \\
+				2017-10-01 & Zach Lerew & Supporting CS444 syntax preferences \\
+				2017-10-01 & Zach Lerew & Added lerewz portion of writeup and latex document base \\
+				2017-10-09 & Rohan Barve & Adding modified writeup.tex \\
+				2017-10-09 & Rohan Barve & Adding instructions to run kernel for future use \\
+				2017-10-09 & Rohan Barve & Added related misc files \\
+				2017-10-09 & Zach Lerew & Added git log and abstract to write up \\
+				2017-10-09 & Zach Lerew & Removed unnecessary qemu parameters \\
+				\hline
+			\end{tabular}
+		\end{center}
 
 	\section*{Work log}
 	This assignment has three distinct sections:
@@ -225,8 +168,8 @@
 	\end{itemize}
 	The work was split between us as such -
 
-	\textbf{Zach}: Concurrency problem, document base / makefile
+	\textbf{Zach}: Concurrency problem, write-up base, makefile, git log
 
-	\textbf{Rohan}: Kernel and VM Qemu setup, configuration and test , concurrency problem review, document body
+	\textbf{Rohan}: Kernel and VM Qemu setup, configuration and test , concurrency problem review, write-up body
 
 \end{document}
