@@ -4,7 +4,7 @@
 \usepackage{url}
 \usepackage{enumitem}
 \usepackage{geometry}
-\geometry{textheight=9.25in, textwidth=6.75in} % 0.75" margins 
+\geometry{textheight=9.25in, textwidth=6.75in} % 0.75" margins
 \usepackage{hyperref}
 \usepackage{listings}
 \usepackage{cite}
@@ -31,7 +31,155 @@
 
 	% Document body
 	\section*{Command line qemu parameters}
-	Section details
+	\begin{itemize}
+		\item-h Display help and exit
+		\item-version Display version information and exit
+		\item-machine [type=]name[,prop=value[,...]]
+					 Select the emulated machine by name. Use "-machine help" to list
+           available machines.
+		\item-cpu model
+           Select CPU model ("-cpu help" for list and additional feature
+           selection)
+
+		\item-accel name[,prop=value[,...]]
+           This is used to enable an accelerator. Depending on the target
+           architecture, kvm, xen, hax or tcg can be available. By default, tcg
+           is used. If there is more than one accelerator specified, the next
+           one is used if the previous one fails to initialize.
+		\item--smp
+       [cpus=]n[,cores=cores][,threads=threads][,sockets=sockets][,maxcpus=maxcpus]
+           Simulate an SMP system with n CPUs. On the PC target, up to 255 CPUs
+           are supported. On Sparc32 target, Linux limits the number of usable
+           CPUs to 4.  For the PC target, the number of cores per socket, the
+           number of threads per cores and the total number of sockets can be
+           specified. Missing values will be computed. If any on the three
+           values is given, the total number of CPUs n can be omitted. maxcpus
+           specifies the maximum number of hotpluggable CPUs.
+		\item-numa node[,mem=size][,cpus=firstcpu[-lastcpu]][,nodeid=node]
+		\item-numa node[,memdev=id][,cpus=firstcpu[-lastcpu]][,nodeid=node]
+		\item-numa dist,src=source,dst=destination,val=distance
+		\item-numa cpu,node-id=node[,socket-id=x][,core-id=y][,thread-id=z]
+           Define a NUMA node and assign RAM and VCPUs to it.  Set the NUMA
+           distance from a source node to a destination node
+		\item-add-fd fd=fd,set=set[,opaque=opaque]
+           Add a file descriptor to an fd set.
+		\item-set group.id.arg=value
+           Set parameter arg for item id of type group
+		\item-global driver.prop=value
+		\item-mem-path path
+           Allocate guest RAM from a temporarily created file in path
+		\item -mem-prealloc
+           Preallocate memory when using -mem-path
+		\item-k language
+           Use keyboard layout language (for example "fr" for French). This
+           option is only needed where it is not easy to get raw PC keycodes
+           (e.g. on Macs, with some X11 servers or with a VNC or curses
+           display). You don't normally need to use it on PC/Linux or PC/Windows
+           hosts
+		\item-audio-help
+           Will show the audio subsystem help: list of drivers, tunable
+           parameters
+		\item-soundhw card1[,card2,...] or -soundhw all
+           Enable audio and selected sound hardware. Use 'help' to print all
+           available sound hardware
+		\item-balloon none
+           Disable balloon device
+		\item-balloon virtio[,addr=addr]
+           Enable virtio balloon device (default), optionally with PCI address
+           addr
+		\item-name name
+           Sets the name of the guest.  This name will be displayed in the SDL
+           window caption.  The name will also be used for the VNC server.  Also
+           optionally set the top visible process name in Linux.  Naming of
+           individual threads can also be enabled on Linux to aid debugging
+
+		\item-uuid uuid
+           Set system UUID
+
+    \item-fda file
+		\item-hdd file
+           Use file as hard disk 0, 1, 2 or 3 image
+		\item-cdrom file
+           Use file as CD-ROM image (you cannot use -hdc and -cdrom at the same
+           time). You can use the host CD-ROM by using /dev/cdrom as filename
+
+		\item-blockdev option[,option[,option[,...]]]
+           Define a new block driver node. Some of the options apply to all
+           block drivers, other options are only accepted for a specific block
+           driver. See below for a list of generic options and options for the
+           most common block drivers
+
+		\item-drive option[,option[,option[,...]]]
+           Define a new drive. This includes creating a block driver node (the
+           backend) as well as a guest device, and is mostly a shortcut for
+           defining the corresponding -blockdev and -device options
+
+		\item-full-screen
+           Start in full screen
+
+		\item-nographic
+           Normally, if QEMU is compiled with graphical window support, it
+           displays output such as guest graphics, guest console, and the QEMU
+           monitor in a window. With this option, you can totally disable
+           graphical output so that QEMU is a simple command line application.
+           The emulated serial port is redirected on the console and muxed with
+           the monitor (unless redirected elsewhere explicitly). Therefore, you
+           can still use QEMU to debug a Linux kernel with a serial console. Use
+           C-a h for help on switching between the console and monitor
+
+		\item-display type
+           Select type of display to use. This option is a replacement for the
+           old style -sdl/-curses/... options
+		\item-usb
+           Enable the USB driver (if it is not used by default yet)
+
+		\item-usbdevice devname
+           Add the USB device devname. Note that this option is deprecated,
+           please use "-device usb-..." instead
+		\item -full-screen
+           Start in full screen
+		\item-vnc display[,option[,option[,...]]]
+           Normally, if QEMU is compiled with graphical window support, it
+           displays output such as guest graphics, guest console, and the QEMU
+           monitor in a window. With this option, you can have QEMU listen on
+           VNC display display and redirect the VGA display over the VNC
+           session. It is very useful to enable the usb tablet device when using
+           this option (option -device usb-tablet). When using the VNC display,
+           you must use the -k parameter to set the keyboard layout if you are
+           not using en-us
+
+	\end{itemize}
+
+	\section*{Kernel build,test,VM Qemu setup}
+
+	\begin{itemize}
+		\item mkdir /scratch/fall2017/26.
+		\item cd /scratch/fall2017/26.
+		\item git clone git://git.yoctoproject.org/linux-yocto-3.19.
+		\item cd linux-yocto-3.19.
+		\item git checkout 'v3.19.2', cd ../
+		\item cp /scratch/files/environment-setup-i586-poky-linux* ./
+		\item cp /scratch/files/bzImage-qemux86.bin ./
+		\item cp /scratch/files/core-image-lsb-sdk-qemux86.ext4 ./
+		\item source environment-setup-i586-poky-linux
+		\item cd linux-yocto-3.19.
+		\item make clean.
+		\item cp /scratch/files/config-3.19.2-yocto-standard ./.config.
+		\item makemenuconfig, adjust general setting Local version to needed group no.
+		\item Save the file as .config and exited menuconfig.
+		\item Compiled the kernel using: make -j4 bzImage. Used 4 threads.
+		\item qemu-system-i386 -gdb tcp::5526 -S -nographic \
+    -kernel linux-yocto-3.19/arch/x86/boot/bzImage \
+    -drive file=core-image-lsb-sdk-qemux86.ext4,if=virtio \
+    -enable-kvm -net none -usb -localtime --no-reboot \
+    --append "root=/dev/vda rw console=ttyS0 debug"
+		\item Open new terminal session and launch gdb.
+		\item Within gdb connect to specified port: (gdb) target remote:5526.
+		\item This step should result in the kernel booting and a login screen qemux86 appearing.
+		\item The login is root and there is no password so I simply hit Enter.
+
+	\end{itemize}
+
 
 	\section*{Concurrency assignment}
 	\subsection*{Purpose}
@@ -79,6 +227,6 @@
 
 	\textbf{Zach}: Concurrency problem, document base / makefile
 
-	\textbf{Rohan}: Kernel emulation, concurrency problem review, document body
+	\textbf{Rohan}: Kernel and VM Qemu setup, configuration and test , concurrency problem review, document body
 
 \end{document}

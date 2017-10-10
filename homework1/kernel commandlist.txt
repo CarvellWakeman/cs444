@@ -1,0 +1,63 @@
+Kernel and VM command list:
+
+Author: Rohan Barve
+
+Work Log:
+
+Here is a list of the following commands that were used to setup the kernel and VM qemu. These steps were followed in ascending order.
+
+1. Created group folder mkdir /scratch/fall2017/26
+cd /scratch/fall2017/26
+
+2. Cloned yocto kernel
+git clone git://git.yoctoproject.org/linux-yocto-3.19
+cd linux-yocto-3.19
+
+3.Changed the tag to the required version v3.19.2
+git checkout 'v3.19.2'
+cd ../
+
+4. Next, cloned the required environment scripts so that qemu is setup correctly and be used at a later point. 
+cp /scratch/files/environment-setup-i586-poky-linux* ./
+
+5. Cloned, the needed kernel and filesystem which will be needed when launching qemu
+cp /scratch/files/bzImage-qemux86.bin ./
+cp /scratch/files/core-image-lsb-sdk-qemux86.ext4 ./
+
+6. Now, we can build the kernel:
+Sourced the correct environment script for the bash shell
+source environment-setup-i586-poky-linux
+cd linux-yocto-3.19
+
+7. Clean out any previous builds with make clean
+
+8. Copy the needed kernel config file 
+cp /scratch/files/config-3.19.2-yocto-standard ./.config
+
+9. Adjusted the kernel setting using: makemenuconfig. In general settings, changed "Local Version" to "-group26hw1". Saved the file as .config and exited menuconfig.
+
+10. Compiled the kernel using: make -j4 bzImage. Used 4 threads.
+
+11. Now, we are ready to test the kernel inside qemu and need to launch qemu with this command replacing the ???? with our group number 5526.
+qemu-system-i386 -gdb tcp::5526 -S -nographic \
+    -kernel linux-yocto-3.19/arch/x86/boot/bzImage \
+    -drive file=core-image-lsb-sdk-qemux86.ext4,if=virtio \
+    -enable-kvm -net none -usb -localtime --no-reboot \
+    --append "root=/dev/vda rw console=ttyS0 debug"
+
+12. This launches qemu in a halted state as it is waiting for us to launch a new terminal session to connect gdb to the specified tcp port we are working on. 
+
+13. Open new terminal session and launch gdb. 
+gdb
+
+14. Within gdb connect to specified port: (gdb) target remote:5526
+
+15. This step should result in the kernel booting and a login screen qemux86 appearing. The login is root and there is no password so I simply hit Enter. 
+
+
+
+
+
+
+
+ 
