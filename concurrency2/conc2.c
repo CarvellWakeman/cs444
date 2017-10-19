@@ -1,7 +1,7 @@
 /*
- * CS444 Homework #1 Concurrency #1 - The Producer-Consumer Problem
+ * CS444 Homework #1 Concurrency #2 - The Dining Philosophers
  * Zach Lerew, Rohan Barve
- * September 30, 2017
+ * October 19th, 2017
 */
 
 #include <pthread.h>
@@ -9,11 +9,8 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <cpuid.h>
-#include "twister.h"
 
 #define DATASIZE 32
-#define NUM_CONSUMERS 5
-#define NUM_PRODUCERS 5
 
 struct Item {
     int val;
@@ -23,32 +20,10 @@ struct Item {
 int itemCount;
 struct Item buffer[DATASIZE];
 
-pthread_t consumer_threads[NUM_CONSUMERS];
-pthread_t producer_threads[NUM_PRODUCERS];
+pthread_t worker_threads[NUM_PRODUCERS];
 pthread_mutex_t mutex_lock;
 
 
-/* based on answer from https://codereview.stackexchange.com/a/150230 */
-int supports_rdrand()
-{
-    unsigned int flag_RDRAND = (1 << 30);
-    unsigned int eax, ebx, ecx, edx;
-    __get_cpuid(1, &eax, &ebx, &ecx, &edx);
-    return ((ecx & flag_RDRAND) == flag_RDRAND);
-}
-
-/* Mersenne Twister implementation credit mcs.anl.gov */
-int random_num(int min, int max)
-{
-    unsigned long var = 0;
-
-    if (supports_rdrand())
-        asm("rdrand %0" : "=r" (var));
-    else
-        var = (unsigned long) randomMT();
-    
-    return ((var % (max-1)) + min);
-}
 
 void *produce(void *argument)
 {
@@ -127,7 +102,6 @@ int main()
         buffer[i].time = -1;
     }
 
-    seedMT(4357U);
 
     pthread_mutex_init(&mutex_lock, NULL);
     pthread_mutex_unlock(&mutex_lock);

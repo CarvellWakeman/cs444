@@ -5,10 +5,10 @@ doc:
 	dvips writeup.dvi
 	ps2pdf writeup.ps
 
-hw2:
-	gcc -pthread -o hw2 -g hw2.c
+conc2:
+	gcc -pthread -o conc2 -g conc2.c
 
-all: hw2 doc clean
+all: conc2 doc clean
 
 
 clean:
