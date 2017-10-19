@@ -6,7 +6,7 @@ doc:
 	ps2pdf writeup.ps
 
 hw2:
-	gcc -pthread -o hw2 -g hw2.c
+	gcc -pthread -o sstf-iosched -g sstf-iosched.c
 
 all: hw2 doc clean
 
