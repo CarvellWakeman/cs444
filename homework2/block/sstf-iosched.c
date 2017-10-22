@@ -19,17 +19,25 @@ static void clook_merged_requests(struct request_queue *q, struct request *rq,
                  struct request *next)
 {
     list_del_init(&next->queuelist);
+
+    printk("CLOOK merge\n");
 }
 
 static int clook_dispatch(struct request_queue *q, int force)
 {
     struct clook_data *nd = q->elevator->elevator_data;
+    char readorwrite;
+    struct request *rq;
 
     if (!list_empty(&nd->queue)) {
-        struct request *rq;
+
         rq = list_entry(nd->queue.next, struct request, queuelist);
         list_del_init(&rq->queuelist);
         elv_dispatch_sort(q, rq);
+
+        readorwrite = (rq_data_dir(rq) & REQ_WRITE) ? 'W' : 'R';
+        printk("CLOOK dispatch %c %lu\n", readorwrite, blk_rq_pos(rq));
+
         return 1;
     }
     return 0;
@@ -38,14 +46,27 @@ static int clook_dispatch(struct request_queue *q, int force)
 static void clook_add_request(struct request_queue *q, struct request *rq)
 {
     struct clook_data *nd = q->elevator->elevator_data;
+    struct list_head *cur = NULL;
+    char readorwrite;
 
-    list_add_tail(&rq->queuelist, &nd->queue);
+    /* This loop puts the request in the right order by comparing physical locations */
+    list_for_each(cur, &nd->queue) {
+        if(rq_end_sector(list_entry(cur, struct request, queuelist)) > rq_end_sector(rq)) {
+            break;
+        }
+    }
+    list_add_tail(&rq->queuelist, cur);
+
+    readorwrite = (rq_data_dir(rq) & REQ_WRITE) ? 'W' : 'R';
+    printk("CLOOK add %c %lu\n", readorwrite, blk_rq_pos(rq));
 }
 
 static struct request *
 clook_former_request(struct request_queue *q, struct request *rq)
 {
     struct clook_data *nd = q->elevator->elevator_data;
+
+    printk("CLOOK former\n");
 
     if (rq->queuelist.prev == &nd->queue)
         return NULL;
@@ -56,6 +77,8 @@ static struct request *
 clook_latter_request(struct request_queue *q, struct request *rq)
 {
     struct clook_data *nd = q->elevator->elevator_data;
+
+    printk("CLOOK latter\n");
 
     if (rq->queuelist.next == &nd->queue)
         return NULL;
@@ -83,8 +106,17 @@ static int clook_init_queue(struct request_queue *q, struct elevator_type *e)
     spin_lock_irq(q->queue_lock);
     q->elevator = eq;
     spin_unlock_irq(q->queue_lock);
+
+    printk("CLOOK initQueue\n");
     return 0;
 }
+
+//static int clook_queue_empty(struct request_queue *q)
+//{
+//    struct clook_data *nd = q->elevator->elevator_data;
+//
+//    return list_empty(&nd->queue);
+//}
 
 static void clook_exit_queue(struct elevator_queue *e)
 {
@@ -92,6 +124,8 @@ static void clook_exit_queue(struct elevator_queue *e)
 
     BUG_ON(!list_empty(&nd->queue));
     kfree(nd);
+
+    printk("CLOOK exitQueue\n");
 }
 
 static struct elevator_type elevator_clook = {
@@ -101,8 +135,9 @@ static struct elevator_type elevator_clook = {
         .elevator_add_req_fn        = clook_add_request,
         .elevator_former_req_fn     = clook_former_request,
         .elevator_latter_req_fn     = clook_latter_request,
-        .elevator_init_fn       = clook_init_queue,
-        .elevator_exit_fn       = clook_exit_queue,
+        //.elevator_queue_empty_fn    = clook_queue_empty,
+        .elevator_init_fn           = clook_init_queue,
+        .elevator_exit_fn           = clook_exit_queue,
     },
     .elevator_name = "clook",
     .elevator_owner = THIS_MODULE,
