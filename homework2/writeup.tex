@@ -24,14 +24,25 @@
 	\begin{titlingpage}
 		\maketitle
 		\begin{abstract}
-			Homework 2
+			\noindent Homework 2
 		\end{abstract}
 	\end{titlingpage}
 
 
 	% Document body
-	\section*{LOOK algorithm design}
+	\section*{CLOOK algorithm design}
+	The C-LOOK I/O scheduling algorithm is rather simple, but solves an issue presented by algorithms such as FIFO. When reading or writing with a hard disk drive, there is a physical head that must move to the correct sector on the spinning platter.
+	This movement takes time, so it should be done as little as possible. The C-LOOK algorithm takes incoming requests and sorts them into a queue in an increasing order.
+	As the system operates, the RW head starts at the lowest (most inner) sector of the queue, and moves in an increasing order towards the outer edge of the platter.
+	When it reaches the last (largest) element in the queue, it moves directly back to the inner edge of the disk to begin the process again.
+	\\After researching this issue, we came to a realization we believe to be true. There are two primary ways to accomplish the task of dispatching requests in a least to greatest order in the C-LOOK algorithm:
+	\subsection{Sort twice in dispatch}
+	Add requests to the end of the queue regardless of the location of the request, or the position of the head. When a request is dispatched, the queue is sorted so that the nearest request is serviced first. Then once a request has been removed from the queue, sort again.
+	\subsection{Sort in dispatch and in add}
+	Use an insertion sort to add requests to the queue, and sort the queue once a sector has been dispatched.
+	This is the option our team took, primarily because the runtime of insertion sort is known and controllable compared to calling a kernel sort function with an unknown implementation.
 
+	
 	\section*{Questions}
 	\subsection*{1.What do you think the main point of this assignment is?}
 	\subsection*{2.How did you personally approach the problem? Design decisions, algorithm, etc.}

@@ -31,12 +31,14 @@ static int clook_dispatch(struct request_queue *q, int force)
 
     if (!list_empty(&nd->queue)) {
 
+        /* Read next entry in queue */
         rq = list_entry(nd->queue.next, struct request, queuelist);
         list_del_init(&rq->queuelist);
         elv_dispatch_sort(q, rq);
 
         readorwrite = (rq_data_dir(rq) & REQ_WRITE) ? 'W' : 'R';
-        printk(KERN_INFO "CLOOK dispatch %c %lu\n", readorwrite, blk_rq_pos(rq));
+        printk(KERN_INFO "CLOOK dispatch %c %lu\n", readorwrite,
+            blk_rq_pos(rq));
 
         return 1;
     }
@@ -46,17 +48,23 @@ static int clook_dispatch(struct request_queue *q, int force)
 static void clook_add_request(struct request_queue *q, struct request *rq)
 {
     struct clook_data *nd = q->elevator->elevator_data;
-    struct list_head *head = NULL;
+    struct list_head *iter = NULL;
 
-    /* Sorts request in the correct place based on physical sector location */
-    list_for_each(head, &nd->queue)
+    /* Insertion sort request in the correct place based on physical sector location */
+    /* Note: iter is advanced by list_for_each */
+    list_for_each(iter, &nd->queue)
     {
-        if (rq_end_sector(rq) < rq_end_sector(list_entry(head, struct request, queuelist)))
+
+        /* If request is greater than iter, break the loop */
+        if (rq_end_sector(rq) <
+            rq_end_sector(list_entry(iter, struct request, queuelist)))
         {
             break;
         }
     }
-    list_add_tail(&rq->queuelist, head);
+
+    /* Insert request into queue*/
+    list_add_tail(&rq->queuelist, iter);
 
     printk(KERN_INFO "CLOOK add %lu\n", blk_rq_pos(rq));
 }
