@@ -24,7 +24,9 @@
 	\begin{titlingpage}
 		\maketitle
 		\begin{abstract}
-			\noindent Homework 2
+			\noindent Homework 2 involves modifying the linux-yocto kernel to use a different I/O scheduler algorithm.
+			The algorithm this team chose to use was the C-LOOK algorithm due to its simplicity.
+			This assignment involved modifying the kernel at a very low level, and learning how to rebuild and run it, and test that the changes worked.
 		\end{abstract}
 	\end{titlingpage}
 
@@ -42,20 +44,50 @@
 	Use an insertion sort to add requests to the queue, and sort the queue once a sector has been dispatched.
 	This is the option our team took, primarily because the runtime of insertion sort is known and controllable compared to calling a kernel sort function with an unknown implementation.
 
-	
+
 	\section*{Questions}
 	\subsection*{1.What do you think the main point of this assignment is?}
+	Understand how I/O schedulers work in a kernel environment.
+	Replace the NO-OP scheduler in the yocto-linux block directory with an implementation of the C-LOOK scheduler.
+	Test and verify our implementation of the C-LOOK I/O scheduler, and write clear instructions for the TA grading the assignment.
+
 	\subsection*{2.How did you personally approach the problem? Design decisions, algorithm, etc.}
+	The first step in this process was to understand how the C-LOOK algorithm works from a conceptual point of view.
+	After that, the goal was to copy the NO-OP scheduler source code into a new file called \textit{sstf-iosched.c}.
+	Next, the Kconfig.iosched file and Makefile in the block directory had to be modified to use the NO-OP scheduler copy.
+	After the kernel was successfully using a new I/O scheduler, the algorithm could be implemented in code.
+	The last step was to test that the algorithm was working as expected.
+
 	\subsection*{3.How did you ensure your solution was correct? Testing details, for instance.}
+	To verify that the C-LOOK algorithm is working as expected, \textit{printk} statements were placed in every function in the scheduler.
+	As files are written or read from the disk, the CLOOK scheduler will print to \textbf{stdout}.
+	These statements can be seen as the kernel is running, or when the \textit {dmseg} command is run.
+	We were able to verify that the algorithm was working as expected by looking at the calls to the dispatch function, and observing that the sector number was always increasing.
+	Additionally, the NO-OP scheduler uses a FIFO queue, meaning that sector requests are added and dispatched immediately.
+	In the C-LOOK scheduler, several sector requests are made in a row, and dispatch is called opportunistically in order by sector.
+
 	\subsection*{4.What did you learn?}
+	I/O scheduling is an important part of a Unix kernel, but most of the work is abstracted into files like \textit{linux\\elevator.h}.
+	The \textit{Kconfig} file specifies which set of functions should be used for the actions like merge, add, and dispatch.
+	This allows different algorithms to be used for I/O scheduling without requiring a massive amount of effort.
+	The C-LOOK algorithm slightly improves efficiency over algorithms like NO-OP by allowing the drive head to move the least amount possible.
+
 	\subsection*{5.How should the TA evaluate your work? Provide detailed steps to prove correctness.}
+	\begin{itemize}
+		\item Apply the kernel patch file and build the kernel.
+		\item The build process should ask you to specify which IOscheduler to use, select CLOOK and continue building.
+		\item Source the correct environment file for your shell. This assignment was made using bash.
+		\item Launch qemu using the following command:
+		qemu-system-i386 -gdb tcp::5526 -S -nographic -kernel ./linux-yocto-3.19/arch/x86/boot/bzImage -drive file=core-image-lsb-sdk-qemux86.ext4,if=ide -enable-kvm -usb -localtime --no-reboot --append "root=/dev/hda rw console=ttyS0 debug"
+
+		\item After the kernel boots (use gdb to continue execution), you should see several CLOOK print statements as confirmation that the new scheduler is being used.
+		\item Navigate to the root directory with \textit{cd /}
+		\item Run the following command while observing the output statements from CLOOK: \textit{mkdir ./cpy \&\& cp -r ./* ./cpy}
+		\item Notice the output print statements - there should be consecutive groups of add requests, interspersed with dispatch statements.
+		The dispatch statements should always be in increasing order, but are not required to come directly after the add requests.
+	\end{itemize}
 
 	\section*{Version control log}
 
-
-	\section*{Work log}
-
-	\textbf{Zach}: Work details
-	\\\textbf{Rohan}: Work details
 
 \end{document}

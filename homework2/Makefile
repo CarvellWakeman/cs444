@@ -5,10 +5,7 @@ doc:
 	dvips writeup.dvi
 	ps2pdf writeup.ps
 
-hw2:
-	gcc -pthread -o sstf-iosched.o -g sstf-iosched.c
-
-all: hw2 doc clean
+all: doc clean
 
 
 clean:
