@@ -91,4 +91,12 @@ Instructions:
 	//NOT NEEDED: -redir tcp:5526::22 // Not needed, redirect port 5526 to port 22?
 
 
- 
+
+
+Kernel patch
+	Create a commit for the assignment changes, then run 
+	git diff <original commit> <modified commit>
+
+Example:
+
+git diff 660613d1a4e94144490850b6c3d350331860fac4 8c7528bb891df49f136e816db6d9a656b92fc378 > linux.patch
