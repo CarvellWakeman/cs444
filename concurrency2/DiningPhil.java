@@ -18,9 +18,12 @@ public class DiningPhil{
       } else{
         philosophers[i] = new Philosopher(leftFork,rightFork);
       }
-    }
+
+    Thread b = new Thread(philosophers[i], "Philosopher " + (i+1)));
+    b.start();
 
   }
+}
 
 
 }
