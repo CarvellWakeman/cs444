@@ -1,16 +1,19 @@
 public class Philosopher implements Runnable
 {
+	private final String name;
 	private final Object rightFork;
 	private final Object leftFork;
 	private static double currentTime = 0.0d;
 
-	static {
+	static
+	{
 		currentTime = getTime();
 	}
 
 	// Constructor
-	Philosopher(Object left, Object right)
+	Philosopher(String name, Object left, Object right)
 	{
+		this.name = name;
 		this.leftFork = left;
 		this.rightFork = right;
 	}
@@ -50,7 +53,8 @@ public class Philosopher implements Runnable
 		}
 	}
 
-	public static double getTime(){
+	public static double getTime()
+	{
 		double a = (System.nanoTime() / 1000000000.0) - currentTime;
 		return Math.round(a * 10.0) / 10.0;
 	}
