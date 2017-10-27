@@ -1,3 +1,10 @@
+TO RUN THIS PROGRAM:
+
+On server os2.engr.oregonstate.edu
+Type "make" to build using javac
+Type "java DiningPhil" to run the program
+
+
 DINING PHILOSOPHERS PROBLEM:
 
 For this concurrency assignment the Java programming language was utilized.
@@ -7,14 +14,13 @@ protocol to solve the dining philosophers problem.
 
 Here is pseudo code of the protocol: 
 
-while(1)
-
-think();
-pickupleftfork();
-pickuprightfork();
-eat();
-putdownrightfork();
-putdownleftfork();
+while(true)
+	think();
+	pickupleftfork();
+	pickuprightfork();
+	eat();
+	putdownrightfork();
+	putdownleftfork();
 
 
 The Runnable interface was used to run Philosopher classes as separate
@@ -33,5 +39,3 @@ philosophers could have acquired their left fork but can't acquire their right
 fork. All philosophers are given a fair chance to eat so there is no starvation.
 All philosophers are alive at the end of the running of the program.
 The driver file / client creates 5 Philosophers and starts all of them. 
-
-
