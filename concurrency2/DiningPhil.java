@@ -1,29 +1,35 @@
-public class DiningPhil{
+public class DiningPhil
+{
+	public static void main(String[] args)throws Exception
+	{
+		// Create philosophers and their forks
+		Philosopher[] philosophers = new Philosopher[5];
+		Object[] forks = new Object[philosophers.length];
 
-  public static void main(String[] args)throws Exception{
+		// Initialize forks
+		for(int i = 0; i < forks.length; i++)
+		{
+			forks[i] = new Object();
+		}
 
-    Philosopher[] philosophers = new Philosopher[5];
-    Object[]forks = new Object[philosophers.length];
+		// Begin dining
+		for(int i = 0; i < philosophers.length; i ++){
+			Object leftFork = forks[i];
+			Object rightFork = forks[(i+1) % forks.length];
 
-    for(int i = 0; i < forks.length; i++){
-      forks[i] = new Object();
-    }
+			// Last philosopher picks up right fork first
+			if( i == philosophers.length - 1)
+			{
+				philosophers[i] = new Philosopher(rightFork, leftFork);
+			}
+			else
+			{
+				philosophers[i] = new Philosopher(leftFork, rightFork);
+			}
 
-    for(int i = 0; i < philosophers.length; i ++){
-      Object leftFork = forks[i];
-      Object rightFork = forks[(i+1) % forks.length];
-
-      if( i == philosophers.length -1){
-        philosophers[i] = new Philosopher(rightFork,leftFork) // Last philosopher picks up right fork first
-      } else{
-        philosophers[i] = new Philosopher(leftFork,rightFork);
-      }
-
-    Thread b = new Thread(philosophers[i], "Philosopher " + (i+1)));
-    b.start();
-
-  }
-}
-
-
+			// Create philosopher thread
+			Thread b = new Thread(philosophers[i], "Philosopher " + (i+1));
+			b.start();
+		}
+	}
 }
