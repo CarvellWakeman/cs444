@@ -1,3 +1,5 @@
+import java.util.concurrent.ThreadLocalRandom;
+
 public class Philosopher implements Runnable
 {
 	private final String name;
@@ -19,10 +21,29 @@ public class Philosopher implements Runnable
 	}
 
 	// A philosopher's action with delay
-	private void doMove(String move) throws InterruptedException
+	private void doMove(int eatThinkFork, String move) throws InterruptedException
 	{
-		System.out.println(Thread.currentThread().getName() + " " + move);
-		Thread.sleep(((int)(Math.random() * 100)));
+		int num = 0;
+		switch(eatThinkFork)
+		{	
+			case 0: // eat
+				num = ThreadLocalRandom.current().nextInt(2, 9+1);
+				break;
+			case 1: // think
+				num = ThreadLocalRandom.current().nextInt(1, 20+1);
+				break;
+			case 2: // fork
+				num = 0;
+				break;
+		}
+
+		if (num > 0){
+			Thread.sleep(num);
+		}
+
+		// print out
+		System.out.println(Thread.currentThread().getName()
+			+ " " + move + " for " + String.valueOf(num) + " seconds");
 	}
 
 	// A philosopher's action
@@ -33,17 +54,17 @@ public class Philosopher implements Runnable
 		{
 			while(true)
 			{
-				doMove(getTime() + "s: Thinking");
+				doMove(1, getTime() + "s: Thinking");
 				synchronized (leftFork)
 				{
-					doMove(getTime() +"s: Picked up left fork");
+					doMove(2, getTime() +"s: Picked up left fork");
 
 					synchronized(rightFork)
 					{
-						doMove(getTime() + "s: Picked up right fork - eating");
-						doMove(getTime() + "s: Put down right fork");
+						doMove(0, getTime() + "s: Picked up right fork - eating");
+						doMove(2, getTime() + "s: Put down right fork");
 					}
-					doMove(getTime() + "s: Put down left fork. Back to thinking");
+					doMove(1, getTime() + "s: Put down left fork. Back to thinking");
 				}
 			}
 		}
