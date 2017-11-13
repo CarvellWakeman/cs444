@@ -1,0 +1,1 @@
+cmd_/nfs/stak/users/barver/OS2HW3/hello.ko := ld -r -m elf_i386 -T ./scripts/module-common.lds --build-id  -o /nfs/stak/users/barver/OS2HW3/hello.ko /nfs/stak/users/barver/OS2HW3/hello.o /nfs/stak/users/barver/OS2HW3/hello.mod.o

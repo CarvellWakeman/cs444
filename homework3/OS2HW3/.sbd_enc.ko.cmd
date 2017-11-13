@@ -1,0 +1,1 @@
+cmd_/nfs/stak/users/barver/OS2HW3/sbd_enc.ko := ld -r -m elf_i386 -T ./scripts/module-common.lds --build-id  -o /nfs/stak/users/barver/OS2HW3/sbd_enc.ko /nfs/stak/users/barver/OS2HW3/sbd_enc.o /nfs/stak/users/barver/OS2HW3/sbd_enc.mod.o
