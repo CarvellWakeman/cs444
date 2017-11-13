@@ -1,0 +1,19 @@
+
+Note:
+
+This is the command needed to get qemu started with networking enabled. Qemu needs to be started this way in order to Scp to work. 
+
+
+qemu-system-i386 -redir tcp:5526::22 -nographic -kernel linux-yocto-3.19/arch/x86/boot/bzImage -drive file=core-image-lsb-sdk-qemux86.ext4 -enable-kvm -usb -localtime --no-reboot --append "root=/dev/hda rwconsole=ttyS0 debug"
+
+Once qemu is launched and you are looged in as root, from another terminal session cd into your kernel build folder, build your kernel module if necessary and then use this command to scp over the module to a Running VM:
+
+Scp -P portNo modulename.ko root@localhost:~
+
+Replace PortNo and modulename with your respective ports and module names.
+
+scp will transfer the module over and report the size of the file and time taken.
+
+Once your module is in the VM, navigate to it , its in ~ and then run insmod modulename.ko. This will load module. To verify type lsmod it should display your loaded module with a few statistics. 
+
+
