@@ -48,7 +48,11 @@
 	\section*{Design}
   For this assignment, the team was given a reference driver through the LDD3 manual online.
   Additionally, our research has lead us to the blog of Pat Patterson, who has updated the LDD3 reference driver for the Linux Kernel v2.6.31. \cite{pat}
-  The team chose to first test a reference device driver available using the LDD3 resource and then added encryption to the existing device driver, testing it for correctness on the qemu VM.
+  The reference code was run in the yocto kernel and its output was examined.
+  We determined that the transfer function is the place where data should be encrypted and decrypted. The transfer function is called by the request function periodically.
+  The transfer function takes a flag to determine if it should read or write.
+  When reading, the function reads from the buffer, decrypts the data, and writes it back to the buffer.
+  When writing, the function reads from the buffer, splits the data into blocks, encrypts them, and writes to device storage.
 
 	\section*{Questions}
 	\subsection*{1.What do you think the main point of this assignment is?}
@@ -134,6 +138,11 @@ lsmod
 	\end{enumerate}
 
 	\subsection*{4.What did you learn?}
+  In this assignment, our team learned how the interactions between kernel software and hardware come together to read and write from device memory.
+  Different kernels have different requirements for module development, which lead to lots of confusing when working with the original LDD3 reference.
+  Kernel level errors are usually less helpful than we are used to, but they get even less helpful at the driver level.
+  We used the Linux cryptography library to encrypt and decrypt data as it was being read and written to device storage.
+  We learned how modules are loaded in the kernel, as well as how to transfer files to a running VM using SCP.
 
 
 	\section*{Work log}
