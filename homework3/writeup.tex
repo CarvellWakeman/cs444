@@ -16,6 +16,13 @@
 \author{Zach Lerew, Rohan Barve\\\large Group 26}
 \date{\today}
 
+% Syntax highlighting
+\lstset{
+  basicstyle=\footnotesize,        % size of fonts used for the code
+  breaklines=true,                 % automatic line breaking only at whitespace
+	frame = single,                  % code framing
+}
+
 
 
 \begin{document}
@@ -24,24 +31,14 @@
 	\begin{titlingpage}
 		\maketitle
 		\begin{abstract}
-			\noindent Homework 3 involves building an ecrypted block device driver using crypto  API and LDD3 reference. The team chose to first test a reference device driver available using the LDD3 resource and then added encryption to the existing device driver and tested it for correctness on the qemu VM. 
-		
+			\noindent Homework 3 involves building an encrypted block device driver using the Linux crypto  API and a reference from LDD3. The team chose to first test a reference device driver available using the LDD3 resource and then added encryption to the existing device driver, testing it for correctness on the qemu VM.
+
 		\end{abstract}
 	\end{titlingpage}
 
 
 	% Document body
-	\section*{CLOOK algorithm design}
-	The C-LOOK I/O scheduling algorithm is rather simple, but solves an issue presented by algorithms such as FIFO. When reading or writing with a hard disk drive, there is a physical head that must move to the correct sector on the spinning platter.
-	This movement takes time, so it should be done as little as possible. The C-LOOK algorithm takes incoming requests and sorts them into a queue in an increasing order.
-	As the system operates, the RW head starts at the lowest (most inner) sector of the queue, and moves in an increasing order towards the outer edge of the platter.
-	When it reaches the last (largest) element in the queue, it moves directly back to the inner edge of the disk to begin the process again.
-	\\After researching this issue, we came to a realization we believe to be true. There are two primary ways to accomplish the task of dispatching requests in a least to greatest order in the C-LOOK algorithm:
-	\subsection{Sort twice in dispatch}
-	Add requests to the end of the queue regardless of the location of the request, or the position of the head. When a request is dispatched, the queue is sorted so that the nearest request is serviced first. Then once a request has been removed from the queue, sort again.
-	\subsection{Sort in dispatch and in add}
-	Use an insertion sort to add requests to the queue, and sort the queue once a sector has been dispatched.
-	This is the option our team took, primarily because the runtime of insertion sort is known and controllable compared to calling a kernel sort function with an unknown implementation.
+	\section*{Design}
 
 
 	\section*{Questions}
@@ -51,38 +48,91 @@
 	coding skills.
 
 	\subsection*{2.How did you personally approach the problem? Design decisions, algorithm, etc.}
-	The way our team approached this problem was to first use the LDD3 reference to read up on block device drivers and understand how the interface works. We then utilized an example device driver source file found on Pat Patterson's blog and tested it with our current kernel and VM setup. 
+	The way our team approached this problem was to first use the LDD3 reference to read up on block device drivers and understand how the interface works. We then utilized an example device driver source file found on Pat Patterson's blog and tested it with our current kernel and VM setup.
 
 	\subsection*{3.How did you ensure your solution was correct? Testing details, for instance.}
-	
+	\begin{enumerate}
+
+	\item Source environment
+	\begin{lstlisting}
+source <environment-file>
+\end{lstlisting}
+
+	\item Clean and build kernel
+	\begin{lstlisting}
+cd linux-yocto-3.19
+make clean && make -j4 all
+\end{lstlisting}
+
+	\item Run qemu using this command, which enables networking and file transfer with Description
+	\begin{lstlisting}
+qemu-system-i386 -redir tcp:<PORT>::22 -nographic -kernel linux-yocto-3.19/arch/x86/boot/bzImage -drive file=core-image-lsb-sdk-qemux86.ext4 -enable-kvm -usb -localtime --no-reboot --append ``root=/dev/hda rwconsole=ttyS0 debug``
+\end{lstlisting}
+
+\item Build module
+\begin{lstlisting}
+cd <path_to_module>
+make
+\end{lstlisting}
+
+	\item Transfer module to VM with SCP
+	\begin{lstlisting}
+cd <path_to_module>
+scp -P <PORT> <module.ko> root@localhost:~
+\end{lstlisting}
+
+	\item Insert module
+	\begin{lstlisting}
+cd ~
+insmod <module.ko>
+shred -z /dev/<module>0
+mkfs.ext2 /dev/<module>0
+mount /dev/<module>0 /mnt/
+lsmod
+\end{lstlisting}
+
+	\item Test module to confirm that it works
+	\begin{lstlisting}
+	echo "Create test file"
+	touch /mnt/testfile
+	ls -la /mnt/
+
+	echo "Insert test data"
+	echo "Test Data" > /mnt/testfile
+	cat /mnt/testfile
+
+	echo "Search for test data in module"
+	grep -a "Test Data" /dev/<module>0
+
+	echo "Display contents of module"
+	cat /dev/<module>0
+
+	echo "Display contents of test file"
+	cat /mnt/testfile
+
+	echo "Delete test file"
+	rm /mnt/testfile
+\end{lstlisting}
+
+\item Remove module
+\begin{lstlisting}
+umount /mnt
+rmmod sbd_enc.ko
+lsmod
+\end{lstlisting}
+
+	\end{enumerate}
 
 	\subsection*{4.What did you learn?}
-	I/O scheduling is an important part of a Unix kernel, but most of the work is abstracted into files like \textit{linux\\elevator.h}.
-	The \textit{Kconfig} file specifies which set of functions should be used for the actions like merge, add, and dispatch.
-	This allows different algorithms to be used for I/O scheduling without requiring a massive amount of effort.
-	The C-LOOK algorithm slightly improves efficiency over algorithms like NO-OP by allowing the drive head to move the least amount possible.
 
 
-	\section*{Version control log}
+	\section*{Work log}
 	\begin{center}
 				\begin{tabular}{ |c|c|c| }
 					\hline
 					Date & Author & Description \\
 					\hline
-					2017-10-12 & Zach Lerew & Initial directory and hw2 files copied from hw1 \\
-					2017-10-12 & Zach Lerew & Added gitignore, writeup sections, removed hw1 code \\
-					2017-10-19 & Zach Lerew & Added noop base code from block directory \\
-					2017-10-20 & Zach Lerew & Copied noop base into sstf-iosched.c \\
-					2017-10-20 & Zach Lerew & Replaced noop references with clook \\
-					2017-10-20 & Rohan Barve & Modified Kconfig to use a custom scheduler, reorganized directory \\
-					2017-10-21 & Rohan Barve & Added print statements for testing and debugging \\
-					2017-10-22 & Zach Lerew & Modified clook\_add function to insert sort requests to the correct place in the queue \\
-					2017-10-22 & Zach Lerew & Added comments to source code and cleaned up\\
-					2017-10-22 & Rohan Barve & Moved design descriptions from team meeting scratch notes to writeup \\
-					2017-10-23 & Rohan Barve & Answered questions in writeup \\
-					2017-10-23 & Zach Lerew & Added version control log to writeup \\
-					2017-10-24 & Rohan Barve & Added kernel patch file \\
-
+					yyyy-mm-dd & First Last & Text \\
 					\hline
 				\end{tabular}
 			\end{center}
