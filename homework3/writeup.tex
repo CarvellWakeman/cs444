@@ -1,18 +1,21 @@
-\documentclass[draftclsnofoot,onecolumn,10pt,compsoc]{IEEEtran}
+\documentclass[onecolumn, draftclsnofoot,10pt, compsoc]{IEEEtran}
 
+\usepackage{graphicx}
 \usepackage{url}
-\usepackage{enumitem}
-\usepackage{geometry}
-\geometry{textheight=9.25in, textwidth=6.75in} % 0.75" margins
-\usepackage{hyperref}
-\usepackage{listings}
-\usepackage{cite}
 \usepackage{setspace}
+\usepackage{geometry}
+\usepackage{listings}
+\usepackage{color}
+\usepackage{etoolbox}
+\usepackage{pdflscape}
+\usepackage{titling}
+
+\geometry{textheight=9.5in, textwidth=7in}
 
 \def\name{Group 26}
 
 
-\title{Homework 3 Report\\\large CS444 Fall17}
+\title{Homework 3s Report\\\large CS444 Fall17}
 \author{Zach Lerew, Rohan Barve\\\large Group 26}
 \date{\today}
 
@@ -26,18 +29,16 @@
 
 
 \begin{document}
+  % Title page
+  \maketitle
 
-	% Title page
-	\begin{titlepage}
-		\maketitle
+	\begin{titlingpage}
 		\begin{abstract}
 			\noindent Homework 3 involves building an encrypted block device driver using the Linux crypto API and a reference from LDD3.
       The module's task is to encrypt and decrypt data as it is written and read from physical storage.
       The module will be designed, developed, transferred to a running VM using SCP, inserted into the module list, and then tested.
-
-
 		\end{abstract}
-	\end{titlepage}
+	\end{titlingpage}
 
   \pagenumbering{arabic}
   \clearpage
