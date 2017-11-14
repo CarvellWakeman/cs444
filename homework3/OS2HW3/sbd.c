@@ -88,12 +88,12 @@ static struct sbd_device {
  * prints hex data at a address
  */
 static void hex_dump(u8 *ptr, unsigned int length) {
-        int i;
+  int i;
 
-        for (i = 0 ; i < length ; i++){
-                printk("%02x ", ptr[i]);
-        }
-        printk("\n");
+  for (i = 0 ; i < length ; i++){
+    printk("%02x ", ptr[i]);
+  }
+  printk("\n");
 }
 
 
@@ -103,29 +103,55 @@ static void hex_dump(u8 *ptr, unsigned int length) {
 static void sbd_transfer(struct sbd_device *dev, sector_t sector,
 	unsigned long nsect, char *buffer, int write)
   {
-
 	unsigned long offset = sector * logical_block_size;
-	unsigned long nbytes = nsect * logical_block_size;
+	unsigned long numbytes = nsect * logical_block_size;
 
-	u8 *hex_str, *hex_buf, *hex_disk;
+	u8 *hex_str;
+  u8 *hex_buf;
+  u8 *hex_disk;
 	unsigned int i;
 
+  /* Print encryption key */
+  printk("sbd: key > %s\n",key);
+
+  /* Create buffer */
 	hex_disk = dev->data + offset;
 	hex_buf = buffer;
-	printk("sbd: key > %s\n",key);
 
-	if ((offset + nbytes) > dev->size)
+  /* Write protection */
+	if ((offset + numbytes) > dev->size)
   {
-		printk(KERN_NOTICE "sbd: Beyond-end write (%ld %ld)\n", offset, nbytes);
+		printk(KERN_NOTICE "sbd: Notice, writing beyond file limits (%ld, %ld)\n", offset, numbytes);
 		return;
 	}
 
+  /* Decrypt and read */
+  if (!write)
+  {
+    printk("sbd: Begin decryption read\n");
+
+		/* Decrypts one block at a time until the full file size */
+		for(i = 0; i < numbytes; i += crypto_cipher_blocksize(tfm))
+    {
+			crypto_cipher_decrypt_one(tfm, hex_buf + i,hex_disk + i);
+		}
+
+		printk("sbd: original hexidecimal data\n");
+		hex_str = dev->data + offset;
+		hex_dump(hex_str,15);
+
+		printk("sbd: decrypted hexidecimal data\n");
+		hex_str = buffer;
+		hex_dump(hex_str,15);
+  }
+
+  /* Encrypt and write */
   if (write)
   {
 		printk("sbd: Begin encrypted write\n");
 
 		/* encrypts only one block at a time to new data size */
-		for(i = 0; i < nbytes; i += crypto_cipher_blocksize(tfm))
+		for(i = 0; i < numbytes; i += crypto_cipher_blocksize(tfm))
     {
 			crypto_cipher_encrypt_one(tfm, hex_disk + i, hex_buf + i);
 		}
@@ -138,26 +164,8 @@ static void sbd_transfer(struct sbd_device *dev, sector_t sector,
 		hex_str = dev->data + offset;
 		hex_str = dev->data + offset;
 		hex_dump(hex_str,15);
-
 	}
-  else
-  {
-		printk("sbd: Begin decryption read\n");
 
-		/* decrypts only one block at a time to full read data size */
-		for(i = 0; i < nbytes; i += crypto_cipher_blocksize(tfm))
-    {
-			crypto_cipher_decrypt_one(tfm, hex_buf + i,hex_disk + i);
-		}
-
-		printk("sbd: original hex data\n");
-		hex_str = dev->data + offset;
-		hex_dump(hex_str,15);
-
-		printk("sbd: decrypted hex data\n");
-		hex_str = buffer;
-		hex_dump(hex_str,15);
-	}
 }
 
 static void sbd_request(struct request_queue *q) {

@@ -95,9 +95,9 @@ scp -P <PORT> <module.ko> root@localhost:~
 	\begin{lstlisting}
 cd ~
 insmod <module.ko>
-shred -z /dev/<module>0
-mkfs.ext2 /dev/<module>0
-mount /dev/<module>0 /mnt/
+shred -z /dev/sbd0
+mkfs.ext2 /dev/sbd0
+mount /dev/sbd0 /mnt/
 lsmod
 \end{lstlisting}
 
@@ -112,10 +112,10 @@ lsmod
 	cat /mnt/testfile
 
 	echo "Search for test data in module"
-	grep -a "Test Data" /dev/<module>0
+	grep -a "Test Data" /dev/sbd0
 
 	echo "Display contents of module"
-	cat /dev/<module>0
+	cat /dev/sbd0
 
 	echo "Display contents of test file"
 	cat /mnt/testfile
@@ -127,7 +127,7 @@ lsmod
 \item Remove module
 \begin{lstlisting}
 umount /mnt
-rmmod sbd_enc.ko
+rmmod sbd.ko
 lsmod
 \end{lstlisting}
 
