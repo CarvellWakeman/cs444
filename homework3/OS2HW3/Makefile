@@ -1,4 +1,4 @@
-obj-m := sbd_enc.o
+obj-m := sbd.o
 KDIR := /scratch/fall2017/26/linux-yocto-3.19/
 PWD_C := $(shell pwd)
 
