@@ -1,6 +1,5 @@
-\documentclass[letterpaper,10pt,fleqn]{article}
+\documentclass[draftclsnofoot,onecolumn,10pt,compsoc]{IEEEtran}
 
-\usepackage{titling}
 \usepackage{url}
 \usepackage{enumitem}
 \usepackage{geometry}
@@ -8,6 +7,7 @@
 \usepackage{hyperref}
 \usepackage{listings}
 \usepackage{cite}
+\usepackage{setspace}
 
 \def\name{Group 26}
 
@@ -28,23 +28,31 @@
 \begin{document}
 
 	% Title page
-	\begin{titlingpage}
+	\begin{titlepage}
 		\maketitle
 		\begin{abstract}
-			\noindent Homework 3 involves building an encrypted block device driver using the Linux crypto  API and a reference from LDD3. The team chose to first test a reference device driver available using the LDD3 resource and then added encryption to the existing device driver, testing it for correctness on the qemu VM.
+			\noindent Homework 3 involves building an encrypted block device driver using the Linux crypto API and a reference from LDD3.
+      The module's task is to encrypt and decrypt data as it is written and read from physical storage.
+      The module will be designed, developed, transferred to a running VM using SCP, inserted into the module list, and then tested.
+
 
 		\end{abstract}
-	\end{titlingpage}
+	\end{titlepage}
 
+  \pagenumbering{arabic}
+  \clearpage
+  \singlespace
 
 	% Document body
 	\section*{Design}
-
+  For this assignment, the team was given a reference driver through the LDD3 manual online.
+  Additionally, our research has lead us to the blog of Pat Patterson, who has updated the LDD3 reference driver for the Linux Kernel v2.6.31. \cite{pat}
+  The team chose to first test a reference device driver available using the LDD3 resource and then added encryption to the existing device driver, testing it for correctness on the qemu VM.
 
 	\section*{Questions}
 	\subsection*{1.What do you think the main point of this assignment is?}
 	The main point of this assignment was to write a device driver for the Linux yocto kernel.
-	Understand the block device interface , utilize the kernel's crypto API and practice kernel
+	Understand the block device interface, utilize the kernel's crypto API and practice kernel
 	coding skills.
 
 	\subsection*{2.How did you personally approach the problem? Design decisions, algorithm, etc.}
@@ -127,14 +135,19 @@ lsmod
 
 
 	\section*{Work log}
-	\begin{center}
-				\begin{tabular}{ |c|c|c| }
-					\hline
-					Date & Author & Description \\
-					\hline
-					yyyy-mm-dd & First Last & Text \\
-					\hline
-				\end{tabular}
-			\end{center}
+  	\begin{center}
+    	\begin{tabular}{ |c|c|c| }
+    		\hline
+    		Date & Author & Description \\
+    		\hline
+    		yyyy-mm-dd & First Last & Text \\
+    		\hline
+    	\end{tabular}
+  	\end{center}
+
+
+  %References
+  \bibliography{ref}
+  \bibliographystyle{IEEEtran}
 
 \end{document}
