@@ -1,17 +1,20 @@
-import java.util.concurrent.ThreadLocalRandom;
-
 public abstract class ThreadType extends Thread implements Runnable
 {
-	private final String name;
-	private static double currentTime = 0.0d;
+    protected String name;
+	protected int id;
+	private static double initialTime = 0.0d;
+
+	static {
+        initialTime = getTime();
+    }
 
 	// Constructor
-	ThreadType(String name)
+	ThreadType(String name, int id)
 	{
-		super(name);
+        super(name+String.valueOf(id));
 
-		this.currentTime = getTime();
-		this.name = name;
+        this.id = id;
+        this.name = name;
 	}
 
 	public abstract boolean canAct();
@@ -24,10 +27,14 @@ public abstract class ThreadType extends Thread implements Runnable
 		{
 			while(true)
 			{
-				if (canAct())
-				{
-					action();
-				}
+                if (canAct())
+                {
+                    action();
+                }
+                //else {
+                //    System.out.println(String.valueOf(ThreadType.getTime()) + " " + name +
+                //            " ID:" + id + " Cannot take action");
+                //}
 			}
 		}
 		catch(InterruptedException e)
@@ -38,7 +45,7 @@ public abstract class ThreadType extends Thread implements Runnable
 
 	public static double getTime()
 	{
-		double a = (System.nanoTime() / 1000000000.0) - currentTime;
+		double a = (System.nanoTime() / 1000000000.0) - initialTime;
 		return Math.round(a * 10.0) / 10.0;
 	}
 }
