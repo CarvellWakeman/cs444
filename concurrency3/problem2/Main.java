@@ -16,7 +16,22 @@ public class Main
     public static synchronized void SetDeleteLock(boolean var){deleteLock = var;}
 
     // Singly linked list
-    static LinkedList list;
+    private static LinkedList list;
+
+    public static synchronized int GetSize(){
+        return list.getSize();
+    }
+    public static synchronized void DeleteItem(int index){
+        list.deleteAtPos(index);
+    }
+
+    public static synchronized void AddItem(String item){
+        list.insertAtEnd(item);
+    }
+
+    public static synchronized String DisplayList(){
+        return list.display();
+    }
 
 
     // Threads

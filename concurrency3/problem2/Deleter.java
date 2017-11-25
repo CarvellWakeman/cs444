@@ -27,15 +27,15 @@ public class Deleter extends ThreadType
         // Work
         Main.SetDeleteLock(true);
         int r = 0;
-        if (Main.list.getSize()>0) {
-            int max = Main.list.getSize();
+        if (Main.GetSize()>0) {
+            int max = Main.GetSize();
             int min = 0;
             r = ThreadLocalRandom.current().nextInt(min, max);
 
-            Main.list.deleteAtPos(r);
+            Main.DeleteItem(r);
         }
 
-        System.out.println(Thread.currentThread().getName() + " List:" + Main.list.display() + " (Del:" + String.valueOf(r) + ")");
+        System.out.println("["+Thread.currentThread().getName()+"]" + " List:" + Main.DisplayList() + " (Del:" + String.valueOf(r) + ")");
         System.out.flush();
         Thread.sleep(500);
 

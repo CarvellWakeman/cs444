@@ -31,10 +31,6 @@ public abstract class ThreadType extends Thread implements Runnable
                 {
                     action();
                 }
-                //else {
-                //    System.out.println(String.valueOf(ThreadType.getTime()) + " " + name +
-                //            " ID:" + id + " Cannot take action");
-                //}
 			}
 		}
 		catch(InterruptedException e)

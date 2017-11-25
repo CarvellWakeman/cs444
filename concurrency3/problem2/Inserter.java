@@ -24,8 +24,8 @@ public class Inserter extends ThreadType
         Main.SetInsertLock(true);
 
         // Work
-		Main.list.insertAtEnd(name + String.valueOf(id));
-        System.out.println(Thread.currentThread().getName() + " List:" + Main.list.display());
+		Main.AddItem(name + String.valueOf(id));
+        System.out.println("["+Thread.currentThread().getName()+"]" + " List:" + Main.DisplayList());
         System.out.flush();
         Thread.sleep(500);
 

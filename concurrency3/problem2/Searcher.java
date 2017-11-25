@@ -24,7 +24,7 @@ public class Searcher extends ThreadType
         Main.SetSearchLock(true);
 
         // Work
-        System.out.println(Thread.currentThread().getName() + " List:" + Main.list.display());
+        System.out.println("["+Thread.currentThread().getName()+"]" + " List:" + Main.DisplayList());
         System.out.flush();
         Thread.sleep(500);
 
