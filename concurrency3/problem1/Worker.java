@@ -14,15 +14,22 @@ public class Worker extends Thread implements Runnable
 
     public boolean canWork()
     {
-        return true;
+        return Main.IsResourceOpen();
     }
 
 	public void work() throws InterruptedException
 	{
+		Main.AddWorker();
+
 		// Work
-		System.out.println(Thread.currentThread().getName());
+		System.out.println(Thread.currentThread().getName() + " - Resource new value:" + String.valueOf(Main.GetResource()));
 		System.out.flush();
-		Thread.sleep(500);
+
+        Main.IncResource();
+
+        Thread.sleep(1000 + id*100);
+
+		Main.RemWorker();
 	}
 
 	@Override
@@ -32,7 +39,10 @@ public class Worker extends Thread implements Runnable
 		{
 			while(true)
 			{
-                work();
+                if (canWork())
+                {
+                    work();
+                }
 			}
 		}
 		catch(InterruptedException e)
