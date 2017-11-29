@@ -1,0 +1,172 @@
+\documentclass[onecolumn, draftclsnofoot,10pt, compsoc]{IEEEtran}
+
+\usepackage{graphicx}
+\usepackage{url}
+\usepackage{setspace}
+\usepackage{geometry}
+\usepackage{listings}
+\usepackage{color}
+\usepackage{etoolbox}
+\usepackage{pdflscape}
+\usepackage{titling}
+
+\geometry{textheight=9.5in, textwidth=7in}
+
+\def\name{Group 26}
+
+
+\title{Homework 3s Report\\\large CS444 Fall17}
+\author{Zach Lerew, Rohan Barve\\\large Group 26}
+\date{\today}
+
+% Syntax highlighting
+\lstset{
+  basicstyle=\footnotesize,        % size of fonts used for the code
+  breaklines=true,                 % automatic line breaking only at whitespace
+	frame = single,                  % code framing
+}
+
+
+
+\begin{document}
+  % Title page
+  \maketitle
+
+	\begin{titlingpage}
+		\begin{abstract}
+			\noindent Homework 3 involved building an encrypted block device driver using the Linux crypto API and a reference sample device driver.  Resources such as LDD3 were utilized to gain an understanding of the device driver interface and a working version of the driver was found using online resources. The driver in its current state was not compatible with the existing yocto kernel version and fixes had to be made in order to get it to build correctly. The module  was then copied into a running instance of a virtual machine using scp  with networking enabled. Next it was inserted using insmod and related commands were run to test the module for correctness.
+     
+		\end{abstract}
+	\end{titlingpage}
+
+  \pagenumbering{arabic}
+  \clearpage
+  \singlespace
+
+	% Document body
+	\section*{Design}
+  For this assignment, the team was given a reference driver through the LDD3 manual online.
+  Additionally, our research has lead us to the blog of Pat Patterson, who has updated the LDD3 reference driver for the Linux Kernel v2.6.31. \cite{pat}
+  The reference code was run in the yocto kernel and its output was examined.
+  We determined that the transfer function is the place where data should be encrypted and decrypted. The transfer function is called by the request function periodically.
+  The transfer function takes a flag to determine if it should read or write.
+  When reading, the function reads from the buffer, decrypts the data, and writes it back to the buffer.
+  When writing, the function reads from the buffer, splits the data into blocks, encrypts them, and writes to device storage.
+
+	\section*{Questions}
+	\subsection*{1.What do you think the main point of this assignment is?}
+	The main point of this assignment was to write a device driver for the Linux yocto kernel.
+	Understand the block device interface, utilize the kernel's crypto API and practice kernel
+	coding skills.
+
+	\subsection*{2.How did you personally approach the problem? Design decisions, algorithm, etc.}
+	The way our team approached this problem was to first use the LDD3 reference to read up on block device drivers and understand how the interface works. We then utilized an example device driver source file found on Pat Patterson's blog and tested it with our current kernel and VM setup.
+
+	\subsection*{3.How did you ensure your solution was correct? Testing details, for instance.}
+
+	\begin{enumerate}
+
+	\item Source environment
+	\begin{lstlisting}
+source <environment-file>
+\end{lstlisting}
+
+	\item Clean and build kernel
+	\begin{lstlisting}
+cd linux-yocto-3.19
+make clean && make -j4 all
+\end{lstlisting}
+
+	\item Run qemu using this command, which enables networking and file transfer with Description
+	\begin{lstlisting}
+qemu-system-i386 -redir tcp:<PORT>::22 -nographic -kernel linux-yocto-3.19/arch/x86/boot/bzImage -drive file=core-image-lsb-sdk-qemux86.ext4 -enable-kvm -usb -localtime --no-reboot --append ``root=/dev/hda rwconsole=ttyS0 debug``
+\end{lstlisting}
+
+\item Build module
+\begin{lstlisting}
+cd linux-yocto-3.19/sbd/
+make
+\end{lstlisting}
+
+	\item Transfer module to VM with SCP
+	\begin{lstlisting}
+cd <path_to_module>
+scp -P <PORT> <module.ko> root@localhost:~
+\end{lstlisting}
+
+	\item Insert module
+	\begin{lstlisting}
+cd ~
+insmod <module.ko>
+shred -z /dev/sbd0
+mkfs.ext2 /dev/sbd0
+mount /dev/sbd0 /mnt/
+lsmod
+\end{lstlisting}
+
+	\item Test module to confirm that it works
+	\begin{lstlisting}
+	echo "Create test file"
+	touch /mnt/testfile
+	ls -la /mnt/
+
+	echo "Insert test data"
+	echo "Test Data" > /mnt/testfile
+	cat /mnt/testfile
+
+	echo "Search for test data in module"
+	grep -a "Test Data" /dev/sbd0
+
+	echo "Display contents of module"
+	cat /dev/sbd0
+
+	echo "Display contents of test file"
+	cat /mnt/testfile
+
+	echo "Delete test file"
+	rm /mnt/testfile
+\end{lstlisting}
+
+\item Remove module
+\begin{lstlisting}
+umount /mnt
+rmmod sbd.ko
+lsmod
+\end{lstlisting}
+
+	\end{enumerate}
+
+	\subsection*{4.What did you learn?}
+  In this assignment, our team learned how the interactions between kernel software and hardware come together to read and write from device memory.
+  Different kernels have different requirements for module development, which lead to lots of confusing when working with the original LDD3 reference.
+  Kernel level errors are usually less helpful than we are used to, but they get even less helpful at the driver level.
+  We used the Linux cryptography library to encrypt and decrypt data as it was being read and written to device storage.
+  We learned how modules are loaded in the kernel, as well as how to transfer files to a running VM using SCP.
+
+
+	\section*{Work log}
+  	\begin{center}
+    	\begin{tabular}{ |c|c|c| }
+    		\hline
+    		Date & Author & Description \\
+    		\hline
+        2017-11-14 & Zach Lerew & Added design and what did you learn sections \\
+        2017-11-14 & Zach Lerew & More writeup styling, references section added \\
+        2017-11-14 & Zach Lerew & Writeup styling complies with guidelines, expanded abstract and design \\
+        2017-11-13 & Zach Lerew & Added testing details to writeup \\
+        2017-11-13 & Rohan Barve & Added notes for setup to be added to writeup \\
+        2017-11-13 & Rohan Barve & Added working copy of block device driver from pat patterson \\
+        2017-11-12 & Rohan Barve & Answered questsions in writeup \\
+        2017-11-12 & Rohan Barve & Added writeup outline from hw2 \\
+        2017-11-12 & Rohan Barve & Adding makefile for compiling and building kernel module and device driver itself \\
+        2017-11-03 & Zach Lerew & Added hw3 initial directory \\
+    		\hline
+    	\end{tabular}
+  	\end{center}
+
+
+  %References
+  \bibliography{ref}
+  \bibliographystyle{IEEEtran}
+
+\end{document}

@@ -1,0 +1,102 @@
+
+Setup Kernel Source code:
+
+1. Created group folder mkdir /scratch/fall2017/26
+cd /scratch/fall2017/26
+
+2. Cloned yocto kernel
+git clone git://git.yoctoproject.org/linux-yocto-3.19
+cd linux-yocto-3.19
+
+3.Changed the tag to the required version v3.19.2
+git checkout 'v3.19.2'
+cd ../
+
+4. Next, cloned the required environment scripts so that qemu is setup correctly and be used at a later point. 
+cp /scratch/files/environment-setup-i586-poky-linux* ./
+
+5. Cloned, the needed kernel and filesystem which will be needed when launching qemu
+cp /scratch/files/bzImage-qemux86.bin ./
+cp /scratch/files/core-image-lsb-sdk-qemux86.ext4 ./
+
+6. Copy the needed kernel config file 
+cp /scratch/files/config-3.19.2-yocto-standard ./.config
+
+7. Adjusted the kernel setting using: make menuconfig from linux-yocto-3.19/. In general settings, changed "Local Version" to "-group26hw1". Saved the file as .config and exited menuconfig
+
+
+
+Building the kernel:
+
+1. Clean out any previous builds with make clean
+
+2. Compiled the kernel using:
+cd linux-yocto-3.19
+make -j4 all
+
+
+
+
+Running the kernel:
+
+1. Now, we can source the correct environment script for the bash shell
+source environment-setup-i586-poky-linux
+
+2. Now, we are ready to test the kernel inside qemu
+qemu-system-i386 -gdb tcp::5526 -S -nographic -kernel linux-yocto-3.19/arch/x86/boot/bzImage -drive file=core-image-lsb-sdk-qemux86.ext4,if=virtio -enable-kvm -net none -usb -localtime --no-reboot --append "root=/dev/vda rw console=ttyS0 debug"
+
+3. This launches qemu in a halted state as it is waiting for us to launch a new terminal session to connect gdb to the specified tcp port we are working on. 
+
+4. Open new terminal session and launch gdb. 
+gdb
+
+5. Within gdb, connect to specified port:
+target remote:5526
+
+6. Within gdb type:
+continue
+
+7. This step should result in the kernel booting and a login screen qemux86 appearing. The login is root and there is no password. 
+
+
+
+
+Running custom scheduler
+
+Notes:
+	Kernel IO scheduler lives in $SRC_ROOT/block/
+	The Makefile must be updated to include a line for the object output of the new IO scheduler
+	The Kconfig file must have lines added to it for the new IO scheduler
+	During the build process, you will be prompted which scheduler to use
+	The boot log for qemu will display "io scheduler <scheduler_name> registered (default)"
+
+Instructions:
+
+	1. Clean out any previous builds with make clean
+
+	2. Compiled the kernel using:
+	cd linux-yocto-3.19
+	make -j4 all
+
+	3. Now, we can source the correct environment script for the bash shell
+	source environment-setup-i586-poky-linux
+
+	4. Now, we are ready to test the kernel inside qemu
+
+	qemu-system-i386 -gdb tcp::5526 -S -nographic -kernel ./linux-yocto-3.19/arch/x86/boot/bzImage -drive file=core-image-lsb-sdk-qemux86.ext4,if=ide -enable-kvm -usb -localtime --no-reboot --append "root=/dev/hda rw console=ttyS0 debug"
+
+	5. To stop the kernel from printing all of the messages being made by clook, run
+	dmesg -n 5
+
+	//NOT NEEDED: -redir tcp:5526::22 // Not needed, redirect port 5526 to port 22?
+
+
+
+
+Kernel patch
+	Create a commit for the assignment changes, then run 
+	git diff <original commit> <modified commit>
+
+Example:
+
+git diff 660613d1a4e94144490850b6c3d350331860fac4 8c7528bb891df49f136e816db6d9a656b92fc378 > linux.patch
