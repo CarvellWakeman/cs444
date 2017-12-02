@@ -19,6 +19,90 @@ index 85893d7..aa08148 100644
 +asmlinkage long sys_slob_free_space(void);
 +asmlinkage long sys_slob_total_space(void);
  #endif
+diff --git a/kernel4/Makefile b/kernel4/Makefile
+new file mode 100644
+index 0000000..812dfc8
+--- /dev/null
++++ b/kernel4/Makefile
+@@ -0,0 +1,8 @@
++obj-m := mod.o
++KDIR := /scratch/fall2017/26/linux-yocto-3.19/
++PWD_C := $(shell pwd)
++
++default:
++	$(MAKE) -C $(KDIR) SUBDIRS=$(PWD_C) modules
++clean:
++	$(MAKE) -C $(KDIR) SUBDIRS=$(PWD_C) clean
+diff --git a/kernel4/mod.c b/kernel4/mod.c
+new file mode 100644
+index 0000000..076bf5f
+--- /dev/null
++++ b/kernel4/mod.c
+@@ -0,0 +1,37 @@
++#include <linux/module.h>
++#include <linux/slab.h>
++#include <linux/random.h>
++
++/**
++ * Testing module for slob module.
++ */
++
++static int __init malloc_init(void){
++    void *tempOne,*tempTwo;
++    int i = 0,randomOne,randomTwo;
++
++    for(i = 0; i < 999999;i++){
++
++        get_random_bytes(&randomOne, sizeof(randomOne));
++        get_random_bytes(&randomTwo, sizeof(randomTwo));
++
++        tempOne = kmalloc(randomTwo, GFP_KERNEL);
++        kfree(tempOne);
++
++         tempTwo = kmalloc(randomOne, GFP_KERNEL);
++        kfree(tempTwo);
++    }
++
++    return 0;
++}
++
++static void __exit malloc_exit(void){
++
++
++}
++
++module_init(malloc_init);
++module_exit(malloc_exit);
++
++MODULE_AUTHOR("Rohan Barve, Zach Lerew");
++MODULE_LICENSE("GPL");
+diff --git a/kernel4/test.c b/kernel4/test.c
+new file mode 100644
+index 0000000..e6c0c44
+--- /dev/null
++++ b/kernel4/test.c
+@@ -0,0 +1,21 @@
++#define _GNU_SOURCE
++#include <stdio.h>
++#include <unistd.h>
++#include <sys/syscall.h>
++#include <sys/types.h>
++
++
++int main(void){
++    long free_sp = syscall(359);
++    long total_sp = syscall(360);
++
++    float ft = ((float)free_sp/(float)total_sp);
++
++
++    printf("free space: %lu\n",free_sp);
++    printf("total space: %lu\n\n",total_sp);
++
++    printf("free/total: %f\n",ft);
++
++    return 0;
++}
 diff --git a/mm/slob.c b/mm/slob.c
 index 96a8620..ec815c7 100644
 --- a/mm/slob.c
