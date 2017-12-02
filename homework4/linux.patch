@@ -1,0 +1,241 @@
+diff --git a/arch/x86/syscalls/syscall_32.tbl b/arch/x86/syscalls/syscall_32.tbl
+index b3560ec..1a47365 100644
+--- a/arch/x86/syscalls/syscall_32.tbl
++++ b/arch/x86/syscalls/syscall_32.tbl
+@@ -365,3 +365,5 @@
+ 356	i386	memfd_create		sys_memfd_create
+ 357	i386	bpf			sys_bpf
+ 358	i386	execveat		sys_execveat			stub32_execveat
++359	i386	slob_free_space		sys_slob_free_space
++360	i386	slob_total_space	sys_slob_total_space
+diff --git a/include/linux/syscalls.h b/include/linux/syscalls.h
+index 85893d7..aa08148 100644
+--- a/include/linux/syscalls.h
++++ b/include/linux/syscalls.h
+@@ -882,4 +882,6 @@ asmlinkage long sys_execveat(int dfd, const char __user *filename,
+ 			const char __user *const __user *argv,
+ 			const char __user *const __user *envp, int flags);
+ 
++asmlinkage long sys_slob_free_space(void);
++asmlinkage long sys_slob_total_space(void);
+ #endif
+diff --git a/mm/slob.c b/mm/slob.c
+index 96a8620..ec815c7 100644
+--- a/mm/slob.c
++++ b/mm/slob.c
+@@ -56,6 +56,9 @@
+  * in order to prevent random node placement.
+  */
+ 
++/*Rerefences / Sources used :  Zainkai's  repo for kernel assignment4, compilor errors were fixed and this file compiles with this
++	      version of linux yocto kernel, stackoverflow, testing slob module with kmalloc sources were used */ 
++
+ #include <linux/kernel.h>
+ #include <linux/slab.h>
+ 
+@@ -214,53 +217,79 @@ static void slob_free_pages(void *b, int order)
+ /*
+  * Allocate a slob block within a given slob_page sp.
+  */
+-static void *slob_page_alloc(struct page *sp, size_t size, int align)
+-{
+-	slob_t *prev, *cur, *aligned = NULL;
+-	int delta = 0, units = SLOB_UNITS(size);
++ static void *slob_page_alloc(struct page *sp, size_t size, int align)
++ {
++ 	slob_t *prev, *cur,*best_prev = NULL, *best = NULL, *best_next, *aligned = NULL;
++ 	int delta = 0, units = SLOB_UNITS(size), data_sz, best_sz_delta = SLOB_UNITS(size);
++ 	slobidx_t avail;
++
++ 	for (prev = NULL, cur = sp->freelist; ; prev = cur, cur = slob_next(cur)) {
++ 		avail = slob_units(cur);
++
++ 		if (align) {
++ 			aligned = (slob_t *)ALIGN((unsigned long)cur, align);
++ 			delta = aligned - cur;
++ 		}
++
++ 		/* data allocation size */
++ 		data_sz = units + delta;
++
++ 		if(avail >= data_sz && (best == NULL || ((avail - data_sz) < best_sz_delta))){
++ 			best_prev = prev;
++ 			best = cur;
++ 			best_sz_delta = avail - data_sz;
++ 			/* exact fit was found */
++ 			if(best_sz_delta == 0){
++ 				break;
++ 			}
++ 		}
++
++ 		/* PREVENTS INFINITE LOOP DONT REMOVE! */
++ 		if(slob_last(cur)){
++ 			break;
++ 		}
++ 	}
++
++ 	/* moved out of for loop to only alloc best fit. */
++ 	if (best != NULL) { /* was best filled? */
++ 		/* fill allocing parameters */
++ 		avail = slob_units(best);
++ 		aligned = (slob_t *)ALIGN((unsigned long)best, align);
++ 		delta = aligned - best;
++
++ 		if (delta) { /* need to fragment head to align? */
++ 			best_next = slob_next(best);
++ 			set_slob(aligned, avail - delta, best_next);
++ 			set_slob(best, delta, aligned);
++ 			best_prev = best;
++ 			best = aligned;
++ 			avail = slob_units(best);
++ 		}
++
++ 		best_next = slob_next(best);
++ 		if (avail == units) { /* exact fit? unlink. */
++ 			if (best_prev)
++ 				set_slob(best_prev, slob_units(best_prev), best_next);
++ 			else
++ 				sp->freelist = best_next;
++ 		} else { /* fragment */
++ 			if (best_prev)
++ 				set_slob(best_prev, slob_units(best_prev), best + units);
++ 			else
++ 				sp->freelist = best + units;
++ 			set_slob(best + units, avail - units, best_next);
++ 		}
++
++ 		sp->units -= units;
++ 		if (!sp->units)
++ 			clear_slob_page_free(sp);
++ 		return best;
++ 	}
++
++ 	//if (slob_last(cur)) /* no longer needed */
++ 	return NULL;
++ }
+ 
+-	for (prev = NULL, cur = sp->freelist; ; prev = cur, cur = slob_next(cur)) {
+-		slobidx_t avail = slob_units(cur);
+-
+-		if (align) {
+-			aligned = (slob_t *)ALIGN((unsigned long)cur, align);
+-			delta = aligned - cur;
+-		}
+-		if (avail >= units + delta) { /* room enough? */
+-			slob_t *next;
+-
+-			if (delta) { /* need to fragment head to align? */
+-				next = slob_next(cur);
+-				set_slob(aligned, avail - delta, next);
+-				set_slob(cur, delta, aligned);
+-				prev = cur;
+-				cur = aligned;
+-				avail = slob_units(cur);
+-			}
+-
+-			next = slob_next(cur);
+-			if (avail == units) { /* exact fit? unlink. */
+-				if (prev)
+-					set_slob(prev, slob_units(prev), next);
+-				else
+-					sp->freelist = next;
+-			} else { /* fragment */
+-				if (prev)
+-					set_slob(prev, slob_units(prev), cur + units);
+-				else
+-					sp->freelist = cur + units;
+-				set_slob(cur + units, avail - units, next);
+-			}
+-
+-			sp->units -= units;
+-			if (!sp->units)
+-				clear_slob_page_free(sp);
+-			return cur;
+-		}
+-		if (slob_last(cur))
+-			return NULL;
+-	}
+-}
+ 
+ /*
+  * slob_alloc: entry point into the slob allocator.
+@@ -640,3 +669,79 @@ void __init kmem_cache_init_late(void)
+ {
+ 	slab_state = FULL;
+ }
++
++asmlinkage long sys_slob_total_space(void){
++	long num_pages = 0; /* total pages in all lists */
++	struct list_head *slob_list;
++	struct page *sp;
++	unsigned long flags;
++
++	printk("slob: running sys_slob_total_space\n");
++
++	spin_lock_irqsave(&slob_lock,flags);
++
++	/*small */
++        slob_list = &free_slob_small;
++	list_for_each_entry(sp,slob_list, lru){
++	   num_pages++;
++	}
++
++
++	/*medium */
++	slob_list = &free_slob_medium;
++	list_for_each_entry(sp,slob_list, lru){
++	    num_pages++;
++	}
++
++	/* large */
++	slob_list = &free_slob_large;
++	list_for_each_entry(sp,slob_list, lru){
++
++	num_pages++;
++
++	}
++
++	spin_unlock_irqrestore(&slob_lock, flags);
++
++	return num_pages * SLOB_UNITS(PAGE_SIZE);
++
++}
++
++asmlinkage long sys_slob_free_space(void){
++	long free_space = 0;
++	struct list_head *slob_list;
++	struct page *sp;
++	unsigned long flags;
++
++	printk("slob: running sys_slob_free_space\n");
++
++	spin_lock_irqsave(&slob_lock, flags);
++
++
++	/*small */
++	slob_list = &free_slob_small;
++	list_for_each_entry(sp,slob_list, lru){
++		free_space += sp->units;
++
++	}
++
++	/*medium */
++	slob_list = &free_slob_medium;
++	list_for_each_entry(sp,slob_list,lru){
++		free_space += sp->units;
++
++	}
++
++	/* large */
++	slob_list = &free_slob_large;
++	list_for_each_entry(sp,slob_list, lru){
++		free_space += sp->units;
++
++	}
++
++	spin_unlock_irqrestore(&slob_lock, flags);
++
++	return free_space;
++
++
++}
