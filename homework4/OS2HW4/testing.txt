@@ -1,0 +1,23 @@
+
+
+How to Test Assignment 4:
+
+1) Apply patch file to kernel and rebuild kernel 
+
+2) Boot Qemu 
+
+2) From another terminal session cd into our submission folder:
+   Scp -P 5526 mod.ko root@localhost:~
+   Scp -P 5526 test.c root@localhost:~
+
+3) While Qemu is launched , and after the files have been copied over to it using Scp run this command: 
+   insmod mod.ko 
+   This step starts testing the slob module by calling kmalloc and kfree in a loop
+
+4) Now, compile test.c using gcc
+   gcc test.c 
+
+5) Run /.a.out and you should start getting messages regarding free space, total space and
+   fragmentation involved. 
+
+Please note that : when you build the kernel you will get fragmentation rates for best-fit. Snapshots showing fragmentation rates for first fit and best fit have been included in the submission folder. 
