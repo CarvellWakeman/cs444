@@ -34,7 +34,7 @@
 
 	\begin{titlingpage}
 		\begin{abstract}
-			\noindent Homework 3 involved building an encrypted block device driver using the Linux crypto API and a reference sample device driver.  Resources such as LDD3 were utilized to gain an understanding of the device driver interface and a working version of the driver was found using online resources. The driver in its current state was not compatible with the existing yocto kernel version and fixes had to be made in order to get it to build correctly. The module  was then copied into a running instance of a virtual machine using scp  with networking enabled. Next it was inserted using insmod and related commands were run to test the module for correctness.
+			\noindent Homework 4 involved modifying the existing slob allocator for the linux yocto kernel to use a best fit algorithm in order to compare fragmentation rates between a first -fit algorithm in slob which is the default against a best -fit.  We also had to learn how to write system calls and how to test a slob allocator. In computer storage, fragmentation is a phenomenon in which storage space is used inefficiently, reducing capacity or performance and often both. The exact consequences of fragmentation depend on the specific system of storage allocation in use and the particular form of fragmentation. In many cases, fragmentation leads to storage space being "wasted", and in that case the term also refers to the wasted space itself. 
      
 		\end{abstract}
 	\end{titlingpage}
@@ -45,22 +45,36 @@
 
 	% Document body
 	\section*{Design}
-  For this assignment, the team was given a reference driver through the LDD3 manual online.
-  Additionally, our research has lead us to the blog of Pat Patterson, who has updated the LDD3 reference driver for the Linux Kernel v2.6.31. \cite{pat}
-  The reference code was run in the yocto kernel and its output was examined.
-  We determined that the transfer function is the place where data should be encrypted and decrypted. The transfer function is called by the request function periodically.
-  The transfer function takes a flag to determine if it should read or write.
-  When reading, the function reads from the buffer, decrypts the data, and writes it back to the buffer.
-  When writing, the function reads from the buffer, splits the data into blocks, encrypts them, and writes to device storage.
+  For this assignment, the team went online to research what a best fit algorithm is and how it can be implemented. Upon conducting research the team decided to implement this version of the best fit algorithm:
+		Algorithm for allocate (n) 
+		size(block) = n + size(header) 
+		Scan free list for smallest block with nWords >= size(block) 
+		If block not found 
+   				 Failure (time for garbage collection!) 
+		Else if free block nWords >= size(block) + threshold* 
+    				Split into a free block and an in-use block 
+    				Free block nWords = Free block nWords - size(block) 
+    				In-use block nWords = size(block) 
+    		Return pointer to in-use block 
+	Else 
+    		Unlink block from free list 
+    		Return pointer to block 
+     
+*Threshold must be at least size(header) + 1 to leave room for header and link 
+Threshold can be set higher to combat fragmentation
+Allocation time is O(K) (K = number of blocks in free list)
+
+This algorithm was found on Rochester Institute of Technology's CS website concerning heap and garbage collection. 
+
 
 	\section*{Questions}
 	\subsection*{1.What do you think the main point of this assignment is?}
-	The main point of this assignment was to write a device driver for the Linux yocto kernel.
-	Understand the block device interface, utilize the kernel's crypto API and practice kernel
-	coding skills.
+	The main point of this assignment was to learn how to write system calls and continue to develop
+	 kernel coding skills. The purpose was to give us an idea of how different storage algorithms can affect the level of fragmentation suffered when allocating memory from the slob allocator. 
 
 	\subsection*{2.How did you personally approach the problem? Design decisions, algorithm, etc.}
-	The way our team approached this problem was to first use the LDD3 reference to read up on block device drivers and understand how the interface works. We then utilized an example device driver source file found on Pat Patterson's blog and tested it with our current kernel and VM setup.
+	The way our team approached this problem was first configure our current kernel to first use the slob allocator as the default is slab. Then we modified the slob.c file to include 2 system calls and fixed many compiler errors. Next we rebuilt the kernel and wrote a kernel module to test the slob allocator by having our module call kmalloc and kree. The kmalloc interface is built on top of the slob allocator and this is the best way to test it by calling kmalloc and kfree in a loop. Next we wrote a simple program that gives us the fragmentation rates for the default first -fit algorithm that exists in slobc. 
+		Once that was done, we tried to implement the best fit algorithm as closely as possible to the design we found which has been outlined above.
 
 	\subsection*{3.How did you ensure your solution was correct? Testing details, for instance.}
 
@@ -137,11 +151,7 @@ lsmod
 	\end{enumerate}
 
 	\subsection*{4.What did you learn?}
-  In this assignment, our team learned how the interactions between kernel software and hardware come together to read and write from device memory.
-  Different kernels have different requirements for module development, which lead to lots of confusing when working with the original LDD3 reference.
-  Kernel level errors are usually less helpful than we are used to, but they get even less helpful at the driver level.
-  We used the Linux cryptography library to encrypt and decrypt data as it was being read and written to device storage.
-  We learned how modules are loaded in the kernel, as well as how to transfer files to a running VM using SCP.
+  In this assignment we learnt how to write system calls, understand the slob allocator interface and how memory is allocated for general purpose operations. We also got practise in modifying an existing kernel file and learnt how frustrating this process can be. It took us many hours of research to try to implement a best-fit algorithm for the slob allocator  we had to work off of. 
 
 
 	\section*{Work log}
