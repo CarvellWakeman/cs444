@@ -7,7 +7,9 @@ How to Test Assignment 4:
 2) Boot Qemu 
 
 2) From another terminal session cd into our submission folder:
-   Scp -P 5526 mod.ko root@localhost:~
+   Please build the kernel module with the makefile provided if necessary.(mod.c)is         included in the submission. After that :
+
+    Scp -P 5526 mod.ko root@localhost:~
    Scp -P 5526 test.c root@localhost:~
 
 3) While Qemu is launched , and after the files have been copied over to it using Scp run this command: 
